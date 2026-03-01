@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#4f46e5"/>
+  <!-- Dumbbell -->
+  <g transform="translate(256,256) rotate(-45)">
+    <!-- Bar -->
+    <rect x="-120" y="-8" width="240" height="16" rx="8" fill="#f1f5f9"/>
+    <!-- Left weight plates -->
+    <rect x="-160" y="-40" width="40" height="80" rx="8" fill="#22d3ee"/>
+    <rect x="-185" y="-30" width="25" height="60" rx="6" fill="#6366f1"/>
+    <!-- Right weight plates -->
+    <rect x="120" y="-40" width="40" height="80" rx="8" fill="#22d3ee"/>
+    <rect x="160" y="-30" width="25" height="60" rx="6" fill="#6366f1"/>
+  </g>
+  <!-- AI sparkle -->
+  <path d="M390 80 L400 110 L430 120 L400 130 L390 160 L380 130 L350 120 L380 110 Z" fill="#22d3ee" opacity="0.9"/>
+  <path d="M120 370 L126 388 L144 394 L126 400 L120 418 L114 400 L96 394 L114 388 Z" fill="#22d3ee" opacity="0.7"/>
+</svg>
