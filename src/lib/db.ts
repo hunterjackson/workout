@@ -12,7 +12,7 @@ export class WorkoutDB extends Dexie {
   constructor() {
     super('WorkoutDB');
     this.version(1).stores({
-      plans: 'id, createdAt',
+      plans: 'id, createdAt, updatedAt',
       routines: 'id, planId, order',
       exercises: 'id, routineId, order',
       workouts: 'id, planId, date',
