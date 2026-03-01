@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db } from './db';
-import { handleToolCall, type MutationResult } from './tool-handler';
+import { handleToolCall } from './tool-handler';
 import { resetDb, makePlan, makeRoutine, makeExercise } from '../test/helpers';
 
 describe('handleToolCall', () => {
