@@ -21,6 +21,7 @@ describe('WorkoutPage', () => {
       <MemoryRouter initialEntries={[`/plan/${id}/workout`]}>
         <Routes>
           <Route path="/" element={<div>Plans Page</div>} />
+          <Route path="/plan/:id" element={<div>Plan Detail Page</div>} />
           <Route path="/plan/:id/workout" element={<WorkoutPage />} />
           <Route path="/plan/:id/history" element={<div>History Page</div>} />
         </Routes>
@@ -28,7 +29,7 @@ describe('WorkoutPage', () => {
     );
   }
 
-  it('should navigate back to plans page when back button is clicked', async () => {
+  it('should navigate back to plan detail when back button is clicked', async () => {
     const user = userEvent.setup();
     renderWorkout();
     await waitFor(() => {
@@ -39,7 +40,7 @@ describe('WorkoutPage', () => {
     await user.click(backButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+      expect(screen.getByText('Plan Detail Page')).toBeInTheDocument();
     });
   });
 
@@ -96,7 +97,7 @@ describe('WorkoutPage', () => {
     expect(screen.getByText('Finish Workout')).toBeInTheDocument();
   });
 
-  it('should have back button in active workout view', async () => {
+  it('should return to routine selection when back button is clicked during active workout', async () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Back Test', schedule: [] });
     await db.routines.add(routine);
@@ -117,8 +118,9 @@ describe('WorkoutPage', () => {
     const backButton = screen.getByRole('button', { name: /back/i });
     await user.click(backButton);
 
+    // Should go back to routine selection, not away from the page
     await waitFor(() => {
-      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+      expect(screen.getByText('Start Workout')).toBeInTheDocument();
     });
   });
 

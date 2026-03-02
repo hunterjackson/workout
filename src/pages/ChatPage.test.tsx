@@ -30,6 +30,7 @@ describe('ChatPage', () => {
       <MemoryRouter initialEntries={[`/plan/${id}/chat`]}>
         <Routes>
           <Route path="/" element={<div>Plans Page</div>} />
+          <Route path="/plan/:id" element={<div>Plan Detail Page</div>} />
           <Route path="/plan/:id/chat" element={<ChatPage />} />
           <Route path="/settings" element={<div>Settings Page</div>} />
         </Routes>
@@ -37,7 +38,7 @@ describe('ChatPage', () => {
     );
   }
 
-  it('should navigate back to plans page when back button is clicked', async () => {
+  it('should navigate back to plan detail when back button is clicked', async () => {
     localStorage.setItem('anthropic_api_key', 'sk-test');
     const user = userEvent.setup();
     renderChat();
@@ -46,11 +47,11 @@ describe('ChatPage', () => {
     await user.click(backButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+      expect(screen.getByText('Plan Detail Page')).toBeInTheDocument();
     });
   });
 
-  it('should navigate back to plans page from no-API-key view', async () => {
+  it('should navigate back to plan detail from no-API-key view', async () => {
     const user = userEvent.setup();
     renderChat();
 
@@ -58,7 +59,7 @@ describe('ChatPage', () => {
     await user.click(backButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+      expect(screen.getByText('Plan Detail Page')).toBeInTheDocument();
     });
   });
 

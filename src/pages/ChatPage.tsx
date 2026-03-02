@@ -31,7 +31,7 @@ export default function ChatPage() {
     return (
       <div className="min-h-full bg-bg p-6 pb-20">
         <div className="mb-6">
-          <BackButton />
+          <BackButton to={`/plan/${id}`} />
         </div>
         <div className="flex flex-col items-center text-center pt-12">
           <div className="text-5xl mb-4">🔑</div>
@@ -54,7 +54,7 @@ export default function ChatPage() {
     <div className="flex flex-col h-[calc(100dvh-64px)] bg-bg">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 pb-0">
-        <BackButton />
+        <BackButton to={`/plan/${id}`} />
         <h1 className="text-2xl font-bold">Chat</h1>
       </div>
 

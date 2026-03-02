@@ -39,7 +39,7 @@ export default function HistoryPage() {
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
       <div className="flex items-center gap-3 mb-6">
-        <BackButton />
+        <BackButton to={`/plan/${id}`} />
         <h1 className="text-2xl font-bold">History</h1>
       </div>
 
