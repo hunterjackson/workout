@@ -40,6 +40,7 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
       <button
         onClick={handleSend}
         disabled={disabled || !text.trim()}
+        aria-label="Send"
         className="w-10 h-10 bg-primary rounded-full flex items-center justify-center shrink-0 disabled:opacity-40"
       >
         {disabled ? (
