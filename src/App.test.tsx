@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import App from './App';
-import { db } from './lib/db';
-import { resetDb, makePlan } from './test/helpers';
+import { resetDb } from './test/helpers';
 
 // We need to mock the SW register since it's imported in main.tsx
 // but App doesn't use it directly - no mock needed here.

@@ -1,16 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 export default function SettingsPage() {
-  const [apiKey, setApiKey] = useState('');
-  const [unit, setUnit] = useState<'lbs' | 'kg'>('lbs');
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('anthropic_api_key') || '');
+  const [unit, setUnit] = useState<'lbs' | 'kg'>(() => (localStorage.getItem('preferred_unit') as 'lbs' | 'kg') || 'lbs');
   const [saved, setSaved] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setApiKey(localStorage.getItem('anthropic_api_key') || '');
-    setUnit((localStorage.getItem('preferred_unit') as 'lbs' | 'kg') || 'lbs');
-  }, []);
 
   const save = () => {
     if (apiKey.trim()) {
