@@ -22,6 +22,12 @@ export function useChat(planId: string) {
     setError(null);
     setMutations([]);
 
+    // Fetch prior history BEFORE saving the new user message,
+    // since sendMessage appends userMessage separately
+    const priorMessages = await db.chatMessages
+      .where('planId').equals(planId)
+      .sortBy('createdAt');
+
     // Save user message
     const userMsg: ChatMessage = {
       id: nanoid(),
@@ -35,11 +41,7 @@ export function useChat(planId: string) {
     setLoading(true);
 
     try {
-      const currentMessages = await db.chatMessages
-        .where('planId').equals(planId)
-        .sortBy('createdAt');
-
-      const response: ChatResponse = await sendMessage(planId, currentMessages, text.trim());
+      const response: ChatResponse = await sendMessage(planId, priorMessages, text.trim());
 
       // Save assistant message
       if (response.message) {

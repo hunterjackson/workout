@@ -317,8 +317,20 @@ describe('handleToolCall', () => {
         input: { routineId: 'nonexistent' },
       });
 
-      // Dexie update on nonexistent ID succeeds silently (returns 0)
-      expect(result.success).toBe(true);
+      // update_routine on nonexistent ID should report failure
+      expect(result.success).toBe(false);
+      expect(result.result).toContain('not found');
+    });
+
+    it('should return failure when updating nonexistent exercise', async () => {
+      const result = await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'update_exercise',
+        input: { exerciseId: 'nonexistent', name: 'New Name' },
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.result).toContain('not found');
     });
   });
 });

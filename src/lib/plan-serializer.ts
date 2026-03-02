@@ -17,7 +17,7 @@ export async function serializePlan(planId: string) {
     routines: routines.map((r) => ({
       id: r.id,
       name: r.name,
-      scheduledDays: r.schedule.map((d) => dayNames[d]),
+      scheduledDays: r.schedule.filter((d) => d >= 0 && d <= 6).map((d) => dayNames[d]),
       notes: r.notes,
       exercises: allExercises
         .filter((e) => e.routineId === r.id)
