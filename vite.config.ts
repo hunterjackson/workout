@@ -29,6 +29,7 @@ export default defineConfig({
         ],
       },
       manifest: {
+        id: '/workout/',
         name: 'Workout AI',
         short_name: 'Workout AI',
         description: 'AI-powered workout planner and tracker',
@@ -54,6 +55,22 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
+          },
+        ],
+        screenshots: [
+          {
+            src: 'screenshot-narrow.png',
+            sizes: '540x720',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Workout AI on mobile',
+          },
+          {
+            src: 'screenshot-wide.png',
+            sizes: '1280x720',
+            type: 'image/png',
+            form_factor: 'wide',
+            label: 'Workout AI on desktop',
           },
         ],
       },

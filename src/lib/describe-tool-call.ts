@@ -1,0 +1,21 @@
+export function describeProposedToolCall(
+  name: string,
+  input: Record<string, unknown>,
+): string {
+  switch (name) {
+    case 'create_routine':
+      return `Create routine "${input.name}"`;
+    case 'update_routine':
+      return input.name ? `Update routine "${input.name}"` : 'Update routine';
+    case 'delete_routine':
+      return 'Delete routine';
+    case 'add_exercise':
+      return `Add exercise "${input.name}" (${input.sets} x ${input.reps})`;
+    case 'update_exercise':
+      return input.name ? `Update exercise "${input.name}"` : 'Update exercise';
+    case 'delete_exercise':
+      return 'Delete exercise';
+    default:
+      return name;
+  }
+}
