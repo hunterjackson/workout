@@ -78,4 +78,13 @@ describe('ChatPage', () => {
     renderChat();
     expect(screen.getByPlaceholderText(/ask ai/i)).toBeInTheDocument();
   });
+
+  it('should use dvh unit for container height to support mobile keyboard', () => {
+    localStorage.setItem('anthropic_api_key', 'sk-test');
+    const { container } = renderChat();
+    const chatContainer = container.firstElementChild as HTMLElement;
+    // dvh ensures the layout resizes when the mobile keyboard opens
+    expect(chatContainer.className).toContain('h-[calc(100dvh-64px)]');
+    expect(chatContainer.className).not.toContain('h-[calc(100vh-64px)]');
+  });
 });
