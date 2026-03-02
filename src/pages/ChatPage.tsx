@@ -35,7 +35,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-64px)] bg-bg">
+    <div className="flex flex-col h-[calc(100dvh-64px)] bg-bg">
       {/* Messages */}
       <div className="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-3">
         {messages.length === 0 && (
