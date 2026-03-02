@@ -2,6 +2,7 @@ export interface Plan {
   id: string;
   name: string;
   goal?: string;
+  model?: string;
   createdAt: number;
   updatedAt: number;
 }

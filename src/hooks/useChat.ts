@@ -22,6 +22,9 @@ export function useChat(planId: string) {
     setError(null);
     setMutations([]);
 
+    // Look up the plan to get its model preference
+    const plan = await db.plans.get(planId);
+
     // Fetch prior history BEFORE saving the new user message,
     // since sendMessage appends userMessage separately
     const priorMessages = await db.chatMessages
@@ -41,7 +44,7 @@ export function useChat(planId: string) {
     setLoading(true);
 
     try {
-      const response: ChatResponse = await sendMessage(planId, priorMessages, text.trim());
+      const response: ChatResponse = await sendMessage(planId, priorMessages, text.trim(), plan?.model);
 
       // Save assistant message
       if (response.message) {

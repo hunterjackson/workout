@@ -37,6 +37,22 @@ describe('WorkoutDB', () => {
       expect(deleted).toBeUndefined();
     });
 
+    it('should store and retrieve a plan with a model field', async () => {
+      const plan = makePlan({ name: 'AI Plan', model: 'claude-haiku-4-5-20251001' });
+      await db.plans.add(plan);
+
+      const retrieved = await db.plans.get(plan.id);
+      expect(retrieved?.model).toBe('claude-haiku-4-5-20251001');
+    });
+
+    it('should default model to undefined when not set', async () => {
+      const plan = makePlan({ name: 'No Model' });
+      await db.plans.add(plan);
+
+      const retrieved = await db.plans.get(plan.id);
+      expect(retrieved?.model).toBeUndefined();
+    });
+
     it('should query plans by createdAt index', async () => {
       const p1 = makePlan({ name: 'First', createdAt: 1000 });
       const p2 = makePlan({ name: 'Second', createdAt: 2000 });

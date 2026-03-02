@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import PlanDetailPage from './PlanDetailPage';
 import { db } from '../lib/db';
@@ -78,5 +79,48 @@ describe('PlanDetailPage', () => {
     // With no routines, all days should be Rest
     const restLabels = screen.getAllByText('Rest');
     expect(restLabels.length).toBe(7);
+  });
+
+  describe('model selector', () => {
+    it('should render a model selector', async () => {
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Test Plan')).toBeInTheDocument();
+      });
+      expect(screen.getByLabelText('AI Model')).toBeInTheDocument();
+    });
+
+    it('should default to Claude Sonnet when no model is set', async () => {
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Test Plan')).toBeInTheDocument();
+      });
+      const select = screen.getByLabelText('AI Model') as HTMLSelectElement;
+      expect(select.value).toBe('claude-sonnet-4-20250514');
+    });
+
+    it('should show the plan model when set', async () => {
+      await db.plans.update(planId, { model: 'claude-haiku-4-5-20251001' });
+      renderPage();
+      await waitFor(() => {
+        const select = screen.getByLabelText('AI Model') as HTMLSelectElement;
+        expect(select.value).toBe('claude-haiku-4-5-20251001');
+      });
+    });
+
+    it('should update plan model when selection changes', async () => {
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByLabelText('AI Model')).toBeInTheDocument();
+      });
+
+      const select = screen.getByLabelText('AI Model');
+      await user.selectOptions(select, 'claude-haiku-4-5-20251001');
+
+      // Verify DB was updated
+      const updatedPlan = await db.plans.get(planId);
+      expect(updatedPlan?.model).toBe('claude-haiku-4-5-20251001');
+    });
   });
 });

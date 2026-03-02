@@ -154,6 +154,40 @@ describe('sendMessage', () => {
     expect(callArgs.messages).toHaveLength(51);
   });
 
+  it('should use model parameter when provided', async () => {
+    localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: 'text', text: 'Response' }],
+      stop_reason: 'end_turn',
+    });
+
+    await sendMessage(planId, [], 'Hello', 'claude-haiku-4-5-20251001');
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'claude-haiku-4-5-20251001',
+      })
+    );
+  });
+
+  it('should default to claude-sonnet-4-20250514 when no model provided', async () => {
+    localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+    mockCreate.mockResolvedValueOnce({
+      content: [{ type: 'text', text: 'Response' }],
+      stop_reason: 'end_turn',
+    });
+
+    await sendMessage(planId, [], 'Hello');
+
+    expect(mockCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: 'claude-sonnet-4-20250514',
+      })
+    );
+  });
+
   it('should include plan state in system prompt', async () => {
     localStorage.setItem('anthropic_api_key', 'sk-test-key');
 

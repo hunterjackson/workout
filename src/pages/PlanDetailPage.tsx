@@ -1,6 +1,13 @@
 import { useParams } from 'react-router-dom';
 import { usePlan } from '../hooks/usePlan';
+import { db } from '../lib/db';
 import RoutineCard from '../components/RoutineCard';
+
+const MODEL_OPTIONS = [
+  { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet' },
+  { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku' },
+  { value: 'claude-opus-4-20250514', label: 'Claude Opus' },
+];
 
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -28,6 +35,23 @@ export default function PlanDetailPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{plan.name}</h1>
         {plan.goal && <p className="text-text-muted mt-1">{plan.goal}</p>}
+      </div>
+
+      {/* Model selector */}
+      <div className="bg-surface rounded-xl p-4 mb-6">
+        <label htmlFor="model-select" className="text-sm font-semibold text-text-muted uppercase tracking-wide">
+          AI Model
+        </label>
+        <select
+          id="model-select"
+          value={plan.model || 'claude-sonnet-4-20250514'}
+          onChange={(e) => db.plans.update(plan.id, { model: e.target.value, updatedAt: Date.now() })}
+          className="w-full mt-2 bg-bg rounded-lg px-3 py-2 text-sm text-text outline-none focus:ring-2 focus:ring-primary"
+        >
+          {MODEL_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Weekly schedule overview */}
