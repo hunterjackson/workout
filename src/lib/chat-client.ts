@@ -2,7 +2,8 @@ import Anthropic from '@anthropic-ai/sdk';
 import { tools } from './tools';
 import { serializePlan } from './plan-serializer';
 import { handleToolCall, type MutationResult } from './tool-handler';
-import type { ChatMessage } from './types';
+import { describeProposedToolCall } from './describe-tool-call';
+import type { ChatMessage, ProposedToolCall } from './types';
 
 const SYSTEM_PROMPT = `You are a knowledgeable, encouraging fitness coach and workout planner. You help users create and refine workout plans through conversation.
 
@@ -20,6 +21,7 @@ GUIDELINES:
 - When suggesting exercises, include sets, reps, and rest periods
 - For video URLs, include YouTube links for exercises when you're confident about good instructional videos
 - The user's preferred weight unit is: {UNIT}
+- The user will review and approve or reject your proposed changes before they are applied
 
 CURRENT PLAN STATE:
 {PLAN_STATE}`;
@@ -29,6 +31,8 @@ export interface ChatResponse {
   mutations: MutationResult[];
 }
 
+export type OnToolCallsCallback = (proposed: ProposedToolCall[]) => Promise<boolean>;
+
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 
 export async function sendMessage(
@@ -36,6 +40,7 @@ export async function sendMessage(
   chatHistory: ChatMessage[],
   userMessage: string,
   model?: string,
+  onToolCalls?: OnToolCallsCallback,
 ): Promise<ChatResponse> {
   const apiKey = localStorage.getItem('anthropic_api_key');
   if (!apiKey) throw new Error('No API key set. Go to Settings to add your Anthropic API key.');
@@ -93,21 +98,46 @@ export async function sendMessage(
       break;
     }
 
-    // Execute tool calls
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
-    for (const toolUse of toolUseBlocks) {
-      const result = await handleToolCall(planId, {
+    // If onToolCalls is provided, let the user review before executing
+    let approved = true;
+    if (onToolCalls) {
+      const proposed: ProposedToolCall[] = toolUseBlocks.map((toolUse) => ({
         id: toolUse.id,
         name: toolUse.name,
         input: toolUse.input as Record<string, unknown>,
-      });
-      allMutations.push(result);
-      toolResults.push({
-        type: 'tool_result',
-        tool_use_id: toolUse.id,
-        content: result.result,
-        is_error: !result.success,
-      });
+        description: describeProposedToolCall(toolUse.name, toolUse.input as Record<string, unknown>),
+      }));
+      approved = await onToolCalls(proposed);
+    }
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+
+    if (approved) {
+      // Execute tool calls
+      for (const toolUse of toolUseBlocks) {
+        const result = await handleToolCall(planId, {
+          id: toolUse.id,
+          name: toolUse.name,
+          input: toolUse.input as Record<string, unknown>,
+        });
+        allMutations.push(result);
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content: result.result,
+          is_error: !result.success,
+        });
+      }
+    } else {
+      // User rejected — send rejection results to Claude
+      for (const toolUse of toolUseBlocks) {
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content: 'User rejected this proposed change.',
+          is_error: true,
+        });
+      }
     }
 
     // Continue conversation with tool results

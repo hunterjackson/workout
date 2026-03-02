@@ -1,20 +1,42 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { nanoid } from 'nanoid';
 import { db } from '../lib/db';
 import { sendMessage, type ChatResponse } from '../lib/chat-client';
-import type { ChatMessage } from '../lib/types';
+import type { ChatMessage, ProposedToolCall } from '../lib/types';
 import type { MutationResult } from '../lib/tool-handler';
 
 export function useChat(planId: string) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mutations, setMutations] = useState<MutationResult[]>([]);
+  const [pendingReview, setPendingReview] = useState<ProposedToolCall[] | null>(null);
+
+  const reviewResolverRef = useRef<((approved: boolean) => void) | null>(null);
 
   const messages = useLiveQuery(
     () => db.chatMessages.where('planId').equals(planId).sortBy('createdAt'),
     [planId]
   ) ?? [];
+
+  const handleToolCalls = useCallback(async (proposed: ProposedToolCall[]): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setPendingReview(proposed);
+      reviewResolverRef.current = resolve;
+    });
+  }, []);
+
+  const approveChanges = useCallback(() => {
+    reviewResolverRef.current?.(true);
+    reviewResolverRef.current = null;
+    setPendingReview(null);
+  }, []);
+
+  const rejectChanges = useCallback(() => {
+    reviewResolverRef.current?.(false);
+    reviewResolverRef.current = null;
+    setPendingReview(null);
+  }, []);
 
   const send = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
@@ -44,7 +66,13 @@ export function useChat(planId: string) {
     setLoading(true);
 
     try {
-      const response: ChatResponse = await sendMessage(planId, priorMessages, text.trim(), plan?.model);
+      const response: ChatResponse = await sendMessage(
+        planId,
+        priorMessages,
+        text.trim(),
+        plan?.model,
+        handleToolCalls,
+      );
 
       // Save assistant message
       if (response.message) {
@@ -76,9 +104,19 @@ export function useChat(planId: string) {
     } finally {
       setLoading(false);
     }
-  }, [planId, loading]);
+  }, [planId, loading, handleToolCalls]);
 
   const clearMutations = useCallback(() => setMutations([]), []);
 
-  return { messages, loading, error, mutations, send, clearMutations };
+  return {
+    messages,
+    loading,
+    error,
+    mutations,
+    pendingReview,
+    send,
+    clearMutations,
+    approveChanges,
+    rejectChanges,
+  };
 }

@@ -59,3 +59,10 @@ export interface ChatMessage {
   content: string;
   createdAt: number;
 }
+
+export interface ProposedToolCall {
+  id: string;
+  name: string;
+  input: Record<string, unknown>;
+  description: string;
+}
