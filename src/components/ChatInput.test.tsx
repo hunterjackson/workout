@@ -32,24 +32,13 @@ describe('ChatInput', () => {
     expect(input.value).toBe('');
   });
 
-  it('should call onSend on Enter key (without Shift)', async () => {
+  it('should not send on Enter key (allows newline)', async () => {
     const user = userEvent.setup();
     const onSend = vi.fn();
     render(<ChatInput onSend={onSend} />);
 
     const input = screen.getByPlaceholderText(/ask ai/i);
-    await user.type(input, 'Test message{Enter}');
-
-    expect(onSend).toHaveBeenCalledWith('Test message');
-  });
-
-  it('should not send on Shift+Enter (allows newline)', async () => {
-    const user = userEvent.setup();
-    const onSend = vi.fn();
-    render(<ChatInput onSend={onSend} />);
-
-    const input = screen.getByPlaceholderText(/ask ai/i);
-    await user.type(input, 'Line 1{Shift>}{Enter}{/Shift}Line 2');
+    await user.type(input, 'Test message{Enter}more text');
 
     expect(onSend).not.toHaveBeenCalled();
   });

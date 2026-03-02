@@ -29,12 +29,26 @@ describe('ChatPage', () => {
     return render(
       <MemoryRouter initialEntries={[`/plan/${id}/chat`]}>
         <Routes>
+          <Route path="/" element={<div>Plans Page</div>} />
           <Route path="/plan/:id/chat" element={<ChatPage />} />
           <Route path="/settings" element={<div>Settings Page</div>} />
         </Routes>
       </MemoryRouter>
     );
   }
+
+  it('should navigate back to plans page when back button is clicked', async () => {
+    localStorage.setItem('anthropic_api_key', 'sk-test');
+    const user = userEvent.setup();
+    renderChat();
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
 
   it('should show API key required when no key is set', () => {
     renderChat();
@@ -111,10 +125,10 @@ describe('ChatPage', () => {
     renderChat();
     const user = userEvent.setup();
 
-    // Type and send a message
+    // Type and send a message (Enter creates newline; click send button)
     const input = screen.getByPlaceholderText(/ask ai/i);
     await user.type(input, 'Create a leg day');
-    await user.keyboard('{Enter}');
+    await user.click(screen.getByRole('button', { name: /send/i }));
 
     // The proposed changes review should appear
     await waitFor(() => {
@@ -148,7 +162,7 @@ describe('ChatPage', () => {
 
     const input = screen.getByPlaceholderText(/ask ai/i);
     await user.type(input, 'Create a leg day');
-    await user.keyboard('{Enter}');
+    await user.click(screen.getByRole('button', { name: /send/i }));
 
     // Wait for proposed changes
     await waitFor(() => {
