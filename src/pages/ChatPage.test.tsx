@@ -50,6 +50,18 @@ describe('ChatPage', () => {
     });
   });
 
+  it('should navigate back to plans page from no-API-key view', async () => {
+    const user = userEvent.setup();
+    renderChat();
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
+
   it('should show API key required when no key is set', () => {
     renderChat();
     expect(screen.getByText('API Key Required')).toBeInTheDocument();

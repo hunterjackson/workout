@@ -19,18 +19,23 @@ export default function ChatPage() {
 
   if (!hasApiKey) {
     return (
-      <div className="min-h-full bg-bg flex flex-col items-center justify-center p-6 pb-20">
-        <div className="text-5xl mb-4">🔑</div>
-        <h2 className="text-xl font-semibold mb-2">API Key Required</h2>
-        <p className="text-text-muted text-center mb-6">
-          Add your Anthropic API key in Settings to start chatting with your AI workout coach.
-        </p>
-        <button
-          onClick={() => navigate('/settings')}
-          className="bg-primary text-white px-6 py-3 rounded-xl font-medium"
-        >
-          Go to Settings
-        </button>
+      <div className="min-h-full bg-bg p-6 pb-20">
+        <div className="mb-6">
+          <BackButton />
+        </div>
+        <div className="flex flex-col items-center text-center pt-12">
+          <div className="text-5xl mb-4">🔑</div>
+          <h2 className="text-xl font-semibold mb-2">API Key Required</h2>
+          <p className="text-text-muted mb-6">
+            Add your Anthropic API key in Settings to start chatting with your AI workout coach.
+          </p>
+          <button
+            onClick={() => navigate('/settings')}
+            className="bg-primary text-white px-6 py-3 rounded-xl font-medium"
+          >
+            Go to Settings
+          </button>
+        </div>
       </div>
     );
   }

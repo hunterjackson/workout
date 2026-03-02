@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/BackButton';
 
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('anthropic_api_key') || '');
   const [unit, setUnit] = useState<'lbs' | 'kg'>(() => (localStorage.getItem('preferred_unit') as 'lbs' | 'kg') || 'lbs');
   const [saved, setSaved] = useState(false);
-  const navigate = useNavigate();
 
   const save = () => {
     if (apiKey.trim()) {
@@ -21,11 +20,7 @@ export default function SettingsPage() {
   return (
     <div className="min-h-full bg-bg p-4">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-surface flex items-center justify-center">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
+        <BackButton />
         <h1 className="text-2xl font-bold">Settings</h1>
       </div>
 

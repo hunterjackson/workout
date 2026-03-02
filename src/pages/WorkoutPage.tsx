@@ -76,7 +76,10 @@ export default function WorkoutPage() {
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Workout</h1>
+        <div className="flex items-center gap-3">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Workout</h1>
+        </div>
         <div className="text-sm text-text-muted">
           {workout.completedCount}/{workout.totalCount} sets
         </div>
