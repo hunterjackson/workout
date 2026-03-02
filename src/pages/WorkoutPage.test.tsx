@@ -96,6 +96,32 @@ describe('WorkoutPage', () => {
     expect(screen.getByText('Finish Workout')).toBeInTheDocument();
   });
 
+  it('should have back button in active workout view', async () => {
+    const user = userEvent.setup();
+    const routine = makeRoutine(planId, { name: 'Back Test', schedule: [] });
+    await db.routines.add(routine);
+    const exercise = makeExercise(routine.id, { name: 'Curl', sets: 1, reps: '10' });
+    await db.exercises.add(exercise);
+
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('Back Test')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Back Test'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Workout')).toBeInTheDocument();
+    });
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
+
   it('should show progress counter', async () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Test', schedule: [] });
