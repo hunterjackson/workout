@@ -42,8 +42,8 @@ describe('WorkoutPage', () => {
   });
 
   it('should list all routines', async () => {
-    const r1 = makeRoutine(planId, { name: 'Push Day', order: 0 });
-    const r2 = makeRoutine(planId, { name: 'Pull Day', order: 1 });
+    const r1 = makeRoutine(planId, { name: 'Push Day', order: 0, schedule: [] });
+    const r2 = makeRoutine(planId, { name: 'Pull Day', order: 1, schedule: [] });
     await db.routines.bulkAdd([r1, r2]);
 
     renderWorkout();
@@ -55,7 +55,7 @@ describe('WorkoutPage', () => {
 
   it('should start workout when routine is selected', async () => {
     const user = userEvent.setup();
-    const routine = makeRoutine(planId, { name: 'Push Day' });
+    const routine = makeRoutine(planId, { name: 'Push Day', schedule: [] });
     await db.routines.add(routine);
     const exercise = makeExercise(routine.id, {
       name: 'Bench Press',
@@ -70,9 +70,7 @@ describe('WorkoutPage', () => {
       expect(screen.getByText('Push Day')).toBeInTheDocument();
     });
 
-    // Click the routine in "All Routines" section
-    const buttons = screen.getAllByText('Push Day');
-    await user.click(buttons[buttons.length - 1]);
+    await user.click(screen.getByText('Push Day'));
 
     // Should now be in active workout mode
     await waitFor(() => {
@@ -84,7 +82,7 @@ describe('WorkoutPage', () => {
 
   it('should show progress counter', async () => {
     const user = userEvent.setup();
-    const routine = makeRoutine(planId, { name: 'Test' });
+    const routine = makeRoutine(planId, { name: 'Test', schedule: [] });
     await db.routines.add(routine);
     const exercise = makeExercise(routine.id, { name: 'Squat', sets: 2, reps: '5' });
     await db.exercises.add(exercise);
@@ -94,8 +92,7 @@ describe('WorkoutPage', () => {
       expect(screen.getByText('Test')).toBeInTheDocument();
     });
 
-    const buttons = screen.getAllByText('Test');
-    await user.click(buttons[buttons.length - 1]);
+    await user.click(screen.getByText('Test'));
 
     await waitFor(() => {
       expect(screen.getByText('0/2 sets')).toBeInTheDocument();
@@ -104,7 +101,7 @@ describe('WorkoutPage', () => {
 
   it('should show complete modal when Finish Workout is clicked', async () => {
     const user = userEvent.setup();
-    const routine = makeRoutine(planId, { name: 'Day A' });
+    const routine = makeRoutine(planId, { name: 'Day A', schedule: [] });
     await db.routines.add(routine);
     const exercise = makeExercise(routine.id, { name: 'Exercise', sets: 1, reps: '1' });
     await db.exercises.add(exercise);
@@ -114,8 +111,7 @@ describe('WorkoutPage', () => {
       expect(screen.getByText('Day A')).toBeInTheDocument();
     });
 
-    const buttons = screen.getAllByText('Day A');
-    await user.click(buttons[buttons.length - 1]);
+    await user.click(screen.getByText('Day A'));
 
     await waitFor(() => {
       expect(screen.getByText('Finish Workout')).toBeInTheDocument();
@@ -130,7 +126,7 @@ describe('WorkoutPage', () => {
 
   it('should save workout and navigate to history', async () => {
     const user = userEvent.setup();
-    const routine = makeRoutine(planId, { name: 'Session' });
+    const routine = makeRoutine(planId, { name: 'Session', schedule: [] });
     await db.routines.add(routine);
     const exercise = makeExercise(routine.id, { name: 'Lift', sets: 1, reps: '5' });
     await db.exercises.add(exercise);
@@ -140,8 +136,7 @@ describe('WorkoutPage', () => {
       expect(screen.getByText('Session')).toBeInTheDocument();
     });
 
-    const buttons = screen.getAllByText('Session');
-    await user.click(buttons[buttons.length - 1]);
+    await user.click(screen.getByText('Session'));
 
     await waitFor(() => {
       expect(screen.getByText('Finish Workout')).toBeInTheDocument();
