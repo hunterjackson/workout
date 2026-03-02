@@ -77,6 +77,36 @@ describe('HistoryPage', () => {
     });
   });
 
+  it('should display workouts in newest-first order', async () => {
+    const routine = makeRoutine(planId, { name: 'Push' });
+    await db.routines.add(routine);
+
+    // Create workouts on different dates with different completedAt times
+    const older = makeWorkout(planId, [routine.id], {
+      date: '2025-01-01',
+      completedAt: 1000,
+    });
+    const newer = makeWorkout(planId, [routine.id], {
+      date: '2025-06-15',
+      completedAt: 2000,
+    });
+    // Insert older first, then newer
+    await db.workouts.bulkAdd([older, newer]);
+
+    renderHistory();
+
+    await waitFor(() => {
+      const buttons = screen.getAllByRole('button');
+      const dateTexts = buttons.map((b) => b.textContent).filter(Boolean);
+      // The newer date (Jun 15) should appear before the older date (Jan 1)
+      const junIdx = dateTexts.findIndex((t) => t!.includes('Jun'));
+      const janIdx = dateTexts.findIndex((t) => t!.includes('Jan'));
+      expect(junIdx).toBeGreaterThan(-1);
+      expect(janIdx).toBeGreaterThan(-1);
+      expect(junIdx).toBeLessThan(janIdx);
+    });
+  });
+
   it('should expand workout details on click', async () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Push' });

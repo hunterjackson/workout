@@ -44,6 +44,16 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
 
       case 'update_routine': {
         const { routineId, ...updates } = toolCall.input as { routineId: string; name?: string; schedule?: number[]; notes?: string };
+        const existingRoutine = await db.routines.get(routineId);
+        if (!existingRoutine) {
+          return {
+            toolUseId: toolCall.id,
+            toolName: toolCall.name,
+            success: false,
+            result: `Routine not found: ${routineId}`,
+            description: `Routine not found`,
+          };
+        }
         await db.routines.update(routineId, updates);
         await db.plans.update(planId, { updatedAt: Date.now() });
         return {
@@ -102,6 +112,16 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
 
       case 'update_exercise': {
         const { exerciseId, ...updates } = toolCall.input as { exerciseId: string; [key: string]: unknown };
+        const existingExercise = await db.exercises.get(exerciseId);
+        if (!existingExercise) {
+          return {
+            toolUseId: toolCall.id,
+            toolName: toolCall.name,
+            success: false,
+            result: `Exercise not found: ${exerciseId}`,
+            description: `Exercise not found`,
+          };
+        }
         if (updates.reps !== undefined) updates.reps = String(updates.reps);
         await db.exercises.update(exerciseId, updates);
         await db.plans.update(planId, { updatedAt: Date.now() });

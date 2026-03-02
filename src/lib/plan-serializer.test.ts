@@ -116,6 +116,23 @@ describe('serializePlan', () => {
     expect(result!.routines[1].exercises[0].name).toBe('Row');
   });
 
+  it('should filter out invalid schedule day numbers', async () => {
+    // Bug: out-of-range day values (e.g., 7, -1) produce undefined in scheduledDays
+    const plan = makePlan();
+    await db.plans.add(plan);
+
+    const routine = makeRoutine(plan.id, { schedule: [0, 7, -1, 3] });
+    await db.routines.add(routine);
+
+    const result = await serializePlan(plan.id);
+    // Should only include valid day names, filtering out undefined
+    const days = result!.routines[0].scheduledDays;
+    expect(days).not.toContain(undefined);
+    expect(days).toContain('Sunday');
+    expect(days).toContain('Wednesday');
+    expect(days).toHaveLength(2);
+  });
+
   it('should not include internal fields (routineId, order) in exercise output', async () => {
     const plan = makePlan();
     await db.plans.add(plan);

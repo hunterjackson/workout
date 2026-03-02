@@ -8,7 +8,11 @@ export default function HistoryPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const workouts = useLiveQuery(
-    () => id ? db.workouts.where('planId').equals(id).reverse().sortBy('completedAt') : [],
+    async () => {
+      if (!id) return [];
+      const results = await db.workouts.where('planId').equals(id).sortBy('completedAt');
+      return results.reverse();
+    },
     [id]
   );
 

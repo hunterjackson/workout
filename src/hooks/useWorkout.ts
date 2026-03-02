@@ -17,6 +17,7 @@ export function useWorkout(planId: string) {
   const [sets, setSets] = useState<ActiveSet[]>([]);
   const [started, setStarted] = useState(false);
   const [selectedRoutineIds, setSelectedRoutineIds] = useState<string[]>([]);
+  const [startedAt, setStartedAt] = useState<number>(0);
 
   const initializeSets = useCallback(async (routineIds: string[]) => {
     setSelectedRoutineIds(routineIds);
@@ -40,6 +41,7 @@ export function useWorkout(planId: string) {
       }
     }
     setSets(initialSets);
+    setStartedAt(Date.now());
     setStarted(true);
   }, []);
 
@@ -71,7 +73,7 @@ export function useWorkout(planId: string) {
       planId,
       date: today,
       routineIds: selectedRoutineIds,
-      startedAt: Date.now(),
+      startedAt,
       completedAt: Date.now(),
       notes,
     };
@@ -95,7 +97,7 @@ export function useWorkout(planId: string) {
     }
 
     return workout.id;
-  }, [workoutId, planId, selectedRoutineIds, sets]);
+  }, [workoutId, planId, selectedRoutineIds, sets, startedAt]);
 
   // Group sets by exercise for display
   const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; sets: ActiveSet[] }>>(
