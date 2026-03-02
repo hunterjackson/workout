@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
+import BackButton from '../components/BackButton';
 
 export default function HistoryPage() {
   const { id } = useParams();
@@ -37,7 +38,10 @@ export default function HistoryPage() {
 
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
-      <h1 className="text-2xl font-bold mb-6">History</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <BackButton />
+        <h1 className="text-2xl font-bold">History</h1>
+      </div>
 
       {workouts.length === 0 ? (
         <div className="text-center py-16">

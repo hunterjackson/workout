@@ -1,7 +1,8 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { usePlan } from '../hooks/usePlan';
 import { db } from '../lib/db';
 import RoutineCard from '../components/RoutineCard';
+import BackButton from '../components/BackButton';
 
 const MODEL_OPTIONS = [
   { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet' },
@@ -13,7 +14,6 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 
 export default function PlanDetailPage() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { plan, routines, getRoutineExercises } = usePlan(id);
 
   if (!plan) {
@@ -34,15 +34,9 @@ export default function PlanDetailPage() {
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
       <div className="mb-6 flex items-start gap-3">
-        <button
-          onClick={() => navigate('/')}
-          aria-label="Back"
-          className="w-10 h-10 rounded-full bg-surface flex items-center justify-center shrink-0 mt-0.5"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
+        <div className="mt-0.5">
+          <BackButton />
+        </div>
         <div>
           <h1 className="text-2xl font-bold">{plan.name}</h1>
           {plan.goal && <p className="text-text-muted mt-1">{plan.goal}</p>}

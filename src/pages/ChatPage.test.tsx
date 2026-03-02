@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import ChatPage from './ChatPage';
 import { db } from '../lib/db';
@@ -28,12 +29,26 @@ describe('ChatPage', () => {
     return render(
       <MemoryRouter initialEntries={[`/plan/${id}/chat`]}>
         <Routes>
+          <Route path="/" element={<div>Plans Page</div>} />
           <Route path="/plan/:id/chat" element={<ChatPage />} />
           <Route path="/settings" element={<div>Settings Page</div>} />
         </Routes>
       </MemoryRouter>
     );
   }
+
+  it('should navigate back to plans page when back button is clicked', async () => {
+    localStorage.setItem('anthropic_api_key', 'sk-test');
+    const user = userEvent.setup();
+    renderChat();
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
 
   it('should show API key required when no key is set', () => {
     renderChat();
