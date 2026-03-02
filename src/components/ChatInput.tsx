@@ -18,13 +18,6 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
-
   const handleInput = () => {
     if (inputRef.current) {
       inputRef.current.style.height = 'auto';
@@ -38,7 +31,6 @@ export default function ChatInput({ onSend, disabled }: ChatInputProps) {
         ref={inputRef}
         value={text}
         onChange={(e) => setText(e.target.value)}
-        onKeyDown={handleKeyDown}
         onInput={handleInput}
         placeholder="Ask AI to build your workout plan..."
         disabled={disabled}
