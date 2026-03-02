@@ -112,7 +112,7 @@ export default function WorkoutPage() {
                     onChange={(e) =>
                       workout.updateSet(exerciseId, set.setNumber, { reps: parseInt(e.target.value) || 0 })
                     }
-                    className="bg-surface-light rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full min-w-0 bg-surface-light rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-primary"
                   />
                   <input
                     type="number"
@@ -120,7 +120,7 @@ export default function WorkoutPage() {
                     onChange={(e) =>
                       workout.updateSet(exerciseId, set.setNumber, { weight: parseFloat(e.target.value) || 0 })
                     }
-                    className="bg-surface-light rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full min-w-0 bg-surface-light rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-primary"
                   />
                   <button
                     onClick={() => workout.toggleSet(exerciseId, set.setNumber)}

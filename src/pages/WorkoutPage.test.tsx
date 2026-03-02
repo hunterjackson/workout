@@ -155,4 +155,29 @@ describe('WorkoutPage', () => {
     expect(workouts).toHaveLength(1);
     expect(workouts[0].planId).toBe(planId);
   });
+
+  it('should use w-full and min-w-0 on set inputs to prevent overflow', async () => {
+    const user = userEvent.setup();
+    const routine = makeRoutine(planId, { name: 'Overflow Test', schedule: [] });
+    await db.routines.add(routine);
+    const exercise = makeExercise(routine.id, { name: 'Press', sets: 1, reps: '10', weight: 135 });
+    await db.exercises.add(exercise);
+
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('Overflow Test')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Overflow Test'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Press')).toBeInTheDocument();
+    });
+
+    const inputs = screen.getAllByRole('spinbutton');
+    for (const input of inputs) {
+      expect(input.className).toContain('min-w-0');
+      expect(input.className).toContain('w-full');
+    }
+  });
 });
