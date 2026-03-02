@@ -21,11 +21,27 @@ describe('HistoryPage', () => {
     return render(
       <MemoryRouter initialEntries={[`/plan/${id}/history`]}>
         <Routes>
+          <Route path="/" element={<div>Plans Page</div>} />
           <Route path="/plan/:id/history" element={<HistoryPage />} />
         </Routes>
       </MemoryRouter>
     );
   }
+
+  it('should navigate back to plans page when back button is clicked', async () => {
+    const user = userEvent.setup();
+    renderHistory();
+    await waitFor(() => {
+      expect(screen.getByText('History')).toBeInTheDocument();
+    });
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
 
   it('should render the History heading', async () => {
     renderHistory();

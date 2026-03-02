@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { usePlan } from '../hooks/usePlan';
 import { db } from '../lib/db';
 import RoutineCard from '../components/RoutineCard';
+import BackButton from '../components/BackButton';
 
 const MODEL_OPTIONS = [
   { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet' },
@@ -32,9 +33,14 @@ export default function PlanDetailPage() {
 
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">{plan.name}</h1>
-        {plan.goal && <p className="text-text-muted mt-1">{plan.goal}</p>}
+      <div className="mb-6 flex items-start gap-3">
+        <div className="mt-0.5">
+          <BackButton />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold">{plan.name}</h1>
+          {plan.goal && <p className="text-text-muted mt-1">{plan.goal}</p>}
+        </div>
       </div>
 
       {/* Model selector */}

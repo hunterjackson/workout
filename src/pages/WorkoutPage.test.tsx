@@ -20,12 +20,28 @@ describe('WorkoutPage', () => {
     return render(
       <MemoryRouter initialEntries={[`/plan/${id}/workout`]}>
         <Routes>
+          <Route path="/" element={<div>Plans Page</div>} />
           <Route path="/plan/:id/workout" element={<WorkoutPage />} />
           <Route path="/plan/:id/history" element={<div>History Page</div>} />
         </Routes>
       </MemoryRouter>
     );
   }
+
+  it('should navigate back to plans page when back button is clicked', async () => {
+    const user = userEvent.setup();
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('Start Workout')).toBeInTheDocument();
+    });
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
 
   it('should render Start Workout heading', async () => {
     renderWorkout();

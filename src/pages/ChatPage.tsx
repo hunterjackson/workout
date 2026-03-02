@@ -4,6 +4,7 @@ import { useChat } from '../hooks/useChat';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import MutationToast from '../components/MutationToast';
+import BackButton from '../components/BackButton';
 
 export default function ChatPage() {
   const { id } = useParams();
@@ -36,6 +37,12 @@ export default function ChatPage() {
 
   return (
     <div className="flex flex-col h-[calc(100dvh-64px)] bg-bg">
+      {/* Header */}
+      <div className="flex items-center gap-3 p-4 pb-0">
+        <BackButton />
+        <h1 className="text-2xl font-bold">Chat</h1>
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto hide-scrollbar p-4 space-y-3">
         {messages.length === 0 && (

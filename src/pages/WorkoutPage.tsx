@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlan } from '../hooks/usePlan';
 import { useWorkout } from '../hooks/useWorkout';
+import BackButton from '../components/BackButton';
 
 export default function WorkoutPage() {
   const { id } = useParams();
@@ -19,7 +20,10 @@ export default function WorkoutPage() {
   if (!workout.started) {
     return (
       <div className="min-h-full bg-bg p-4 pb-20">
-        <h1 className="text-2xl font-bold mb-2">Start Workout</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <BackButton />
+          <h1 className="text-2xl font-bold">Start Workout</h1>
+        </div>
         <p className="text-text-muted mb-6">Select routines to perform today</p>
 
         {todaysRoutines.length > 0 && (

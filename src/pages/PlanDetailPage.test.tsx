@@ -20,11 +20,27 @@ describe('PlanDetailPage', () => {
     return render(
       <MemoryRouter initialEntries={[`/plan/${id}`]}>
         <Routes>
+          <Route path="/" element={<div>Plans Page</div>} />
           <Route path="/plan/:id" element={<PlanDetailPage />} />
         </Routes>
       </MemoryRouter>
     );
   }
+
+  it('should navigate back to plans page when back button is clicked', async () => {
+    const user = userEvent.setup();
+    renderPage();
+    await waitFor(() => {
+      expect(screen.getByText('Test Plan')).toBeInTheDocument();
+    });
+
+    const backButton = screen.getByRole('button', { name: /back/i });
+    await user.click(backButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+    });
+  });
 
   it('should show loading state initially for non-existent plan', async () => {
     renderPage('nonexistent');
