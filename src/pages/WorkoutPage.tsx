@@ -21,7 +21,7 @@ export default function WorkoutPage() {
     return (
       <div className="min-h-full bg-bg p-4 pb-20">
         <div className="flex items-center gap-3 mb-2">
-          <BackButton />
+          <BackButton to={`/plan/${id}`} />
           <h1 className="text-2xl font-bold">Start Workout</h1>
         </div>
         <p className="text-text-muted mb-6">Select routines to perform today</p>
@@ -77,7 +77,15 @@ export default function WorkoutPage() {
     <div className="min-h-full bg-bg p-4 pb-20">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-3">
-          <BackButton />
+          <button
+            onClick={() => workout.cancelWorkout()}
+            aria-label="Back"
+            className="w-10 h-10 rounded-full bg-surface flex items-center justify-center shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
           <h1 className="text-2xl font-bold">Workout</h1>
         </div>
         <div className="text-sm text-text-muted">

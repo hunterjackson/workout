@@ -22,13 +22,14 @@ describe('HistoryPage', () => {
       <MemoryRouter initialEntries={[`/plan/${id}/history`]}>
         <Routes>
           <Route path="/" element={<div>Plans Page</div>} />
+          <Route path="/plan/:id" element={<div>Plan Detail Page</div>} />
           <Route path="/plan/:id/history" element={<HistoryPage />} />
         </Routes>
       </MemoryRouter>
     );
   }
 
-  it('should navigate back to plans page when back button is clicked', async () => {
+  it('should navigate back to plan detail when back button is clicked', async () => {
     const user = userEvent.setup();
     renderHistory();
     await waitFor(() => {
@@ -39,7 +40,7 @@ describe('HistoryPage', () => {
     await user.click(backButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Plans Page')).toBeInTheDocument();
+      expect(screen.getByText('Plan Detail Page')).toBeInTheDocument();
     });
   });
 

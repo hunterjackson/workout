@@ -111,6 +111,13 @@ export function useWorkout(planId: string) {
     {}
   );
 
+  const cancelWorkout = useCallback(() => {
+    setSets([]);
+    setSelectedRoutineIds([]);
+    setStartedAt(0);
+    setStarted(false);
+  }, []);
+
   const completedCount = sets.filter((s) => s.completed).length;
   const totalCount = sets.length;
 
@@ -124,5 +131,6 @@ export function useWorkout(planId: string) {
     updateSet,
     toggleSet,
     completeWorkout,
+    cancelWorkout,
   };
 }
