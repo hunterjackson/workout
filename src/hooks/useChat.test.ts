@@ -52,4 +52,42 @@ describe('useChat', () => {
     );
     expect(userMessagesInHistory).toHaveLength(0);
   });
+
+  it('should pass plan model to sendMessage', async () => {
+    // Clear and recreate plan with a model
+    await resetDb();
+    const plan = makePlan({ model: 'claude-haiku-4-5-20251001' });
+    await db.plans.add(plan);
+
+    mockSendMessage.mockResolvedValueOnce({
+      message: 'Response',
+      mutations: [],
+    });
+
+    const { result } = renderHook(() => useChat(plan.id));
+
+    await act(async () => {
+      await result.current.send('Hi');
+    });
+
+    // sendMessage is called with (planId, chatHistory, userMessage, model)
+    const [, , , model] = mockSendMessage.mock.calls[0];
+    expect(model).toBe('claude-haiku-4-5-20251001');
+  });
+
+  it('should pass undefined model when plan has no model set', async () => {
+    mockSendMessage.mockResolvedValueOnce({
+      message: 'Response',
+      mutations: [],
+    });
+
+    const { result } = renderHook(() => useChat(planId));
+
+    await act(async () => {
+      await result.current.send('Hi');
+    });
+
+    const [, , , model] = mockSendMessage.mock.calls[0];
+    expect(model).toBeUndefined();
+  });
 });

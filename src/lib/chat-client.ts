@@ -29,10 +29,13 @@ export interface ChatResponse {
   mutations: MutationResult[];
 }
 
+const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+
 export async function sendMessage(
   planId: string,
   chatHistory: ChatMessage[],
   userMessage: string,
+  model?: string,
 ): Promise<ChatResponse> {
   const apiKey = localStorage.getItem('anthropic_api_key');
   if (!apiKey) throw new Error('No API key set. Go to Settings to add your Anthropic API key.');
@@ -66,7 +69,7 @@ export async function sendMessage(
 
   for (let i = 0; i < maxLoops; i++) {
     const response = await client.messages.create({
-      model: 'claude-sonnet-4-20250514',
+      model: model || DEFAULT_MODEL,
       max_tokens: 4096,
       system: systemPrompt,
       tools,
