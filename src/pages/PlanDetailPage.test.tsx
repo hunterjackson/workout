@@ -139,4 +139,108 @@ describe('PlanDetailPage', () => {
       expect(updatedPlan?.model).toBe('claude-haiku-4-5-20251001');
     });
   });
+
+  describe('delete routine', () => {
+    it('should show a delete button for each routine', async () => {
+      await db.routines.add(makeRoutine(planId, { name: 'Push Day', schedule: [] }));
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Push Day')).toBeInTheDocument();
+      });
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+    });
+
+    it('should delete routine and its exercises on confirm', async () => {
+      const routine = makeRoutine(planId, { name: 'Push Day', schedule: [] });
+      await db.routines.add(routine);
+      await db.exercises.add(makeExercise(routine.id, { name: 'Bench Press' }));
+
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Push Day')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /delete/i }));
+      await user.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(async () => {
+        expect(await db.routines.count()).toBe(0);
+      });
+      expect(await db.exercises.count()).toBe(0);
+    });
+
+    it('should cancel routine delete', async () => {
+      const routine = makeRoutine(planId, { name: 'Push Day', schedule: [] });
+      await db.routines.add(routine);
+
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Push Day')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /delete/i }));
+      await user.click(screen.getByText('Cancel'));
+
+      expect(await db.routines.count()).toBe(1);
+    });
+  });
+
+  describe('delete exercise', () => {
+    it('should show delete buttons for exercises when routine is expanded', async () => {
+      const routine = makeRoutine(planId, { name: 'Push Day', schedule: [] });
+      await db.routines.add(routine);
+      await db.exercises.add(makeExercise(routine.id, { name: 'Bench Press' }));
+
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Push Day')).toBeInTheDocument();
+      });
+
+      // Expand the routine
+      await user.click(screen.getByText('Push Day'));
+      await waitFor(() => {
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
+      });
+
+      // There should be delete buttons for both routine and exercise
+      const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+      expect(deleteButtons.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should delete a single exercise on confirm', async () => {
+      const routine = makeRoutine(planId, { name: 'Push Day', schedule: [] });
+      await db.routines.add(routine);
+      const ex1 = makeExercise(routine.id, { name: 'Bench Press', order: 0 });
+      const ex2 = makeExercise(routine.id, { name: 'Flyes', order: 1 });
+      await db.exercises.bulkAdd([ex1, ex2]);
+
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Push Day')).toBeInTheDocument();
+      });
+
+      // Expand routine
+      await user.click(screen.getByText('Push Day'));
+      await waitFor(() => {
+        expect(screen.getByText('Bench Press')).toBeInTheDocument();
+      });
+
+      // Click delete on the first exercise
+      const deleteButtons = screen.getAllByRole('button', { name: /delete/i });
+      // The routine delete is first, exercise deletes follow
+      const exerciseDeleteBtn = deleteButtons[1]; // first exercise delete
+      await user.click(exerciseDeleteBtn);
+      await user.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(async () => {
+        expect(await db.exercises.count()).toBe(1);
+      });
+      // The routine should still exist
+      expect(await db.routines.count()).toBe(1);
+    });
+  });
 });

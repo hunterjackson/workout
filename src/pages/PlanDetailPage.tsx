@@ -4,6 +4,15 @@ import { db } from '../lib/db';
 import RoutineCard from '../components/RoutineCard';
 import BackButton from '../components/BackButton';
 
+const deleteRoutine = async (routineId: string) => {
+  await db.exercises.where('routineId').equals(routineId).delete();
+  await db.routines.delete(routineId);
+};
+
+const deleteExercise = async (exerciseId: string) => {
+  await db.exercises.delete(exerciseId);
+};
+
 const MODEL_OPTIONS = [
   { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet' },
   { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku' },
@@ -99,6 +108,8 @@ export default function PlanDetailPage() {
               key={routine.id}
               routine={routine}
               exercises={getRoutineExercises(routine.id)}
+              onDelete={() => deleteRoutine(routine.id)}
+              onDeleteExercise={(exerciseId) => deleteExercise(exerciseId)}
             />
           ))}
         </div>

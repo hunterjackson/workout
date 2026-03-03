@@ -153,4 +153,59 @@ describe('HistoryPage', () => {
     });
     expect(screen.getByText('10 reps')).toBeInTheDocument();
   });
+
+  describe('delete workout', () => {
+    it('should show a delete button for each workout', async () => {
+      const routine = makeRoutine(planId, { name: 'Push' });
+      await db.routines.add(routine);
+      const workout = makeWorkout(planId, [routine.id], { date: '2025-06-15' });
+      await db.workouts.add(workout);
+
+      renderHistory();
+      await waitFor(() => {
+        expect(screen.getByText('Push')).toBeInTheDocument();
+      });
+      expect(screen.getByRole('button', { name: /delete/i })).toBeInTheDocument();
+    });
+
+    it('should delete workout and its sets on confirm', async () => {
+      const routine = makeRoutine(planId, { name: 'Push' });
+      await db.routines.add(routine);
+      const workout = makeWorkout(planId, [routine.id], { date: '2025-06-15' });
+      await db.workouts.add(workout);
+      await db.workoutSets.add(makeWorkoutSet(workout.id, 'ex-1', { exerciseName: 'Bench' }));
+
+      const user = userEvent.setup();
+      renderHistory();
+      await waitFor(() => {
+        expect(screen.getByText('Push')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /delete/i }));
+      await user.click(screen.getByRole('button', { name: /confirm/i }));
+
+      await waitFor(async () => {
+        expect(await db.workouts.count()).toBe(0);
+      });
+      expect(await db.workoutSets.count()).toBe(0);
+    });
+
+    it('should cancel workout delete', async () => {
+      const routine = makeRoutine(planId, { name: 'Push' });
+      await db.routines.add(routine);
+      const workout = makeWorkout(planId, [routine.id], { date: '2025-06-15' });
+      await db.workouts.add(workout);
+
+      const user = userEvent.setup();
+      renderHistory();
+      await waitFor(() => {
+        expect(screen.getByText('Push')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /delete/i }));
+      await user.click(screen.getByText('Cancel'));
+
+      expect(await db.workouts.count()).toBe(1);
+    });
+  });
 });

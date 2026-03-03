@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import BackButton from '../components/BackButton';
+import DeleteButton from '../components/DeleteButton';
 
 export default function HistoryPage() {
   const { id } = useParams();
@@ -36,6 +37,11 @@ export default function HistoryPage() {
   const getWorkoutSets = (workoutId: string) =>
     workoutSets?.filter((s) => s.workoutId === workoutId) || [];
 
+  const deleteWorkout = async (workoutId: string) => {
+    await db.workoutSets.where('workoutId').equals(workoutId).delete();
+    await db.workouts.delete(workoutId);
+  };
+
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
       <div className="flex items-center gap-3 mb-6">
@@ -68,32 +74,37 @@ export default function HistoryPage() {
 
             return (
               <div key={workout.id} className="bg-surface rounded-xl overflow-hidden">
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : workout.id)}
-                  className="w-full p-4 text-left"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <div className="font-semibold">
-                        {new Date(workout.date).toLocaleDateString(undefined, {
-                          weekday: 'short', month: 'short', day: 'numeric',
-                        })}
+                <div className="flex items-start p-4">
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : workout.id)}
+                    className="flex-1 text-left min-w-0"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <div className="font-semibold">
+                          {new Date(workout.date).toLocaleDateString(undefined, {
+                            weekday: 'short', month: 'short', day: 'numeric',
+                          })}
+                        </div>
+                        <div className="text-sm text-text-muted mt-0.5">
+                          {workout.routineIds.map(getRoutineName).join(', ')}
+                        </div>
                       </div>
-                      <div className="text-sm text-text-muted mt-0.5">
-                        {workout.routineIds.map(getRoutineName).join(', ')}
+                      <div className="text-right">
+                        <div className="text-sm text-text-muted">{totalSets} sets</div>
+                        {totalVolume > 0 && (
+                          <div className="text-xs text-text-muted">{totalVolume.toLocaleString()} vol</div>
+                        )}
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-text-muted">{totalSets} sets</div>
-                      {totalVolume > 0 && (
-                        <div className="text-xs text-text-muted">{totalVolume.toLocaleString()} vol</div>
-                      )}
-                    </div>
+                    {workout.notes && (
+                      <p className="text-xs text-text-muted mt-2 italic">"{workout.notes}"</p>
+                    )}
+                  </button>
+                  <div className="ml-2">
+                    <DeleteButton label="Delete this workout?" onConfirm={() => deleteWorkout(workout.id)} />
                   </div>
-                  {workout.notes && (
-                    <p className="text-xs text-text-muted mt-2 italic">"{workout.notes}"</p>
-                  )}
-                </button>
+                </div>
 
                 {isExpanded && (
                   <div className="px-4 pb-4 space-y-3">
