@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
 import { nanoid } from 'nanoid';
 import type { Plan } from '../lib/types';
+import DeleteButton from '../components/DeleteButton';
 
 export default function PlansPage() {
   const plans = useLiveQuery(() => db.plans.orderBy('updatedAt').reverse().toArray());
@@ -11,6 +12,17 @@ export default function PlansPage() {
   const [name, setName] = useState('');
   const [goal, setGoal] = useState('');
   const navigate = useNavigate();
+
+  const deletePlan = async (planId: string) => {
+    const routineIds = await db.routines.where('planId').equals(planId).primaryKeys();
+    await db.exercises.where('routineId').anyOf(routineIds).delete();
+    await db.routines.where('planId').equals(planId).delete();
+    const workoutIds = await db.workouts.where('planId').equals(planId).primaryKeys();
+    await db.workoutSets.where('workoutId').anyOf(workoutIds).delete();
+    await db.workouts.where('planId').equals(planId).delete();
+    await db.chatMessages.where('planId').equals(planId).delete();
+    await db.plans.delete(planId);
+  };
 
   const createPlan = async () => {
     if (!name.trim()) return;
@@ -61,7 +73,7 @@ export default function PlansPage() {
 
       <div className="space-y-3">
         {plans?.map((plan) => (
-          <PlanCard key={plan.id} plan={plan} onClick={() => navigate(`/plan/${plan.id}`)} />
+          <PlanCard key={plan.id} plan={plan} onClick={() => navigate(`/plan/${plan.id}`)} onDelete={() => deletePlan(plan.id)} />
         ))}
       </div>
 
@@ -114,30 +126,32 @@ export default function PlansPage() {
   );
 }
 
-function PlanCard({ plan, onClick }: { plan: Plan; onClick: () => void }) {
+function PlanCard({ plan, onClick, onDelete }: { plan: Plan; onClick: () => void; onDelete: () => void }) {
   const routineCount = useLiveQuery(
     () => db.routines.where('planId').equals(plan.id).count(),
     [plan.id]
   );
 
   return (
-    <button
-      onClick={onClick}
-      className="w-full bg-surface rounded-xl p-4 text-left"
-    >
+    <div className="w-full bg-surface rounded-xl p-4 text-left">
       <div className="flex justify-between items-start">
-        <div>
+        <button onClick={onClick} className="flex-1 text-left min-w-0">
           <h3 className="font-semibold text-lg">{plan.name}</h3>
           {plan.goal && <p className="text-text-muted text-sm mt-0.5">{plan.goal}</p>}
+        </button>
+        <div className="flex items-center gap-1 ml-2">
+          <DeleteButton label={`Delete "${plan.name}"?`} onConfirm={onDelete} />
+          <button onClick={onClick}>
+            <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
         </div>
-        <svg className="w-5 h-5 text-text-muted mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-        </svg>
       </div>
       <div className="flex gap-3 mt-2 text-xs text-text-muted">
         <span>{routineCount ?? 0} routines</span>
         <span>Updated {new Date(plan.updatedAt).toLocaleDateString()}</span>
       </div>
-    </button>
+    </div>
   );
 }

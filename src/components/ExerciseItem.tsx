@@ -1,7 +1,13 @@
 import type { Exercise } from '../lib/types';
 import VideoLink from './VideoLink';
+import DeleteButton from './DeleteButton';
 
-export default function ExerciseItem({ exercise }: { exercise: Exercise }) {
+interface ExerciseItemProps {
+  exercise: Exercise;
+  onDelete?: () => void | Promise<void>;
+}
+
+export default function ExerciseItem({ exercise, onDelete }: ExerciseItemProps) {
   const weightStr = exercise.unit === 'bodyweight'
     ? 'BW'
     : exercise.weight
@@ -19,9 +25,12 @@ export default function ExerciseItem({ exercise }: { exercise: Exercise }) {
           <p className="text-xs text-text-muted truncate">{exercise.notes}</p>
         )}
       </div>
-      <div className="text-xs text-text-muted ml-3 text-right whitespace-nowrap">
-        <div>{exercise.sets} × {exercise.reps}</div>
-        {weightStr && <div>{weightStr}</div>}
+      <div className="flex items-center gap-2">
+        <div className="text-xs text-text-muted text-right whitespace-nowrap">
+          <div>{exercise.sets} × {exercise.reps}</div>
+          {weightStr && <div>{weightStr}</div>}
+        </div>
+        {onDelete && <DeleteButton label={`Delete "${exercise.name}"?`} onConfirm={onDelete} />}
       </div>
     </div>
   );
