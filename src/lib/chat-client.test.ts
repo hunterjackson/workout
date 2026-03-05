@@ -334,6 +334,37 @@ describe('sendMessage', () => {
       expect(toolResults[0].content).toContain('rejected');
     });
 
+    it('should include user feedback in rejection message when provided', async () => {
+      localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+      mockCreate.mockResolvedValueOnce({
+        content: [
+          { type: 'text', text: 'Let me add exercises.' },
+          {
+            type: 'tool_use',
+            id: 'tool-1',
+            name: 'add_exercise',
+            input: { routineId: 'r1', name: 'Squat', sets: 4, reps: '8-10' },
+          },
+        ],
+        stop_reason: 'tool_use',
+      });
+
+      mockCreate.mockResolvedValueOnce({
+        content: [{ type: 'text', text: 'I understand, let me adjust.' }],
+        stop_reason: 'end_turn',
+      });
+
+      const onToolCalls = vi.fn().mockResolvedValue('Too many sets, I prefer 3 sets');
+      await sendMessage(planId, [], 'Add squat', undefined, onToolCalls);
+
+      const secondCall = mockCreate.mock.calls[1][0];
+      const toolResults = secondCall.messages[secondCall.messages.length - 1].content;
+      expect(toolResults[0].is_error).toBe(true);
+      expect(toolResults[0].content).toContain('Too many sets, I prefer 3 sets');
+      expect(toolResults[0].content).toContain('rejected');
+    });
+
     it('should handle multiple tool calls in a single response for review', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 

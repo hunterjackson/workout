@@ -9,6 +9,7 @@ export interface ActiveSet {
   exerciseId: string;
   exerciseName: string;
   exerciseType: ExerciseType;
+  exerciseNotes?: string;
   setNumber: number;
   metrics: LoggedMetrics;
   completed: boolean;
@@ -36,6 +37,7 @@ export function useWorkout(planId: string) {
           exerciseId: ex.id,
           exerciseName: ex.name,
           exerciseType: ex.exerciseType,
+          exerciseNotes: ex.notes,
           setNumber: s,
           metrics: templateToLoggedMetrics(ex.exerciseType, ex.metrics),
           completed: false,
@@ -102,10 +104,10 @@ export function useWorkout(planId: string) {
   }, [workoutId, planId, selectedRoutineIds, sets, startedAt]);
 
   // Group sets by exercise for display
-  const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; exerciseType: ExerciseType; sets: ActiveSet[] }>>(
+  const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; exerciseType: ExerciseType; exerciseNotes?: string; sets: ActiveSet[] }>>(
     (acc, set) => {
       if (!acc[set.exerciseId]) {
-        acc[set.exerciseId] = { exerciseName: set.exerciseName, exerciseType: set.exerciseType, sets: [] };
+        acc[set.exerciseId] = { exerciseName: set.exerciseName, exerciseType: set.exerciseType, exerciseNotes: set.exerciseNotes, sets: [] };
       }
       acc[set.exerciseId].sets.push(set);
       return acc;

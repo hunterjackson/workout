@@ -199,6 +199,119 @@ describe('WorkoutPage', () => {
     expect(workouts[0].planId).toBe(planId);
   });
 
+  it('should show info icon for exercises with notes', async () => {
+    const user = userEvent.setup();
+    const routine = makeRoutine(planId, { name: 'Notes Test', schedule: [] });
+    await db.routines.add(routine);
+    const exercise = makeExercise(routine.id, {
+      name: 'Bench Press',
+      sets: 1,
+      metrics: { reps: '10', weight: 135, unit: 'lbs' },
+      notes: 'Keep your elbows tucked',
+    });
+    await db.exercises.add(exercise);
+
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('Notes Test')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Notes Test'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Bench Press')).toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /show description/i })).toBeInTheDocument();
+  });
+
+  it('should not show info icon for exercises without notes', async () => {
+    const user = userEvent.setup();
+    const routine = makeRoutine(planId, { name: 'No Notes', schedule: [] });
+    await db.routines.add(routine);
+    const exercise = makeExercise(routine.id, {
+      name: 'Squat',
+      sets: 1,
+      metrics: { reps: '10', weight: 135, unit: 'lbs' },
+      notes: undefined,
+    });
+    await db.exercises.add(exercise);
+
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('No Notes')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('No Notes'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Squat')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /show description/i })).not.toBeInTheDocument();
+  });
+
+  it('should show description dialog when info icon is tapped', async () => {
+    const user = userEvent.setup();
+    const routine = makeRoutine(planId, { name: 'Dialog Test', schedule: [] });
+    await db.routines.add(routine);
+    const exercise = makeExercise(routine.id, {
+      name: 'Deadlift',
+      sets: 1,
+      metrics: { reps: '5', weight: 225, unit: 'lbs' },
+      notes: 'Hinge at the hips, keep back straight',
+    });
+    await db.exercises.add(exercise);
+
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('Dialog Test')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Dialog Test'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Deadlift')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /show description/i }));
+
+    expect(screen.getByText('Hinge at the hips, keep back straight')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /close/i })).toBeInTheDocument();
+  });
+
+  it('should close description dialog when close button is tapped', async () => {
+    const user = userEvent.setup();
+    const routine = makeRoutine(planId, { name: 'Close Test', schedule: [] });
+    await db.routines.add(routine);
+    const exercise = makeExercise(routine.id, {
+      name: 'Row',
+      sets: 1,
+      metrics: { reps: '8', weight: 135, unit: 'lbs' },
+      notes: 'Squeeze at the top',
+    });
+    await db.exercises.add(exercise);
+
+    renderWorkout();
+    await waitFor(() => {
+      expect(screen.getByText('Close Test')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByText('Close Test'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Row')).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole('button', { name: /show description/i }));
+    expect(screen.getByText('Squeeze at the top')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /close/i }));
+    await waitFor(() => {
+      expect(screen.queryByText('Squeeze at the top')).not.toBeInTheDocument();
+    });
+  });
+
   it('should use w-full and min-w-0 on set inputs to prevent overflow', async () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Overflow Test', schedule: [] });
