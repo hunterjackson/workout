@@ -15,7 +15,7 @@ describe('tools', () => {
     { name: 'create_routine', required: ['name', 'schedule'] },
     { name: 'update_routine', required: ['routineId'] },
     { name: 'delete_routine', required: ['routineId'] },
-    { name: 'add_exercise', required: ['routineId', 'name', 'sets', 'reps'] },
+    { name: 'add_exercise', required: ['routineId', 'name', 'sets'] },
     { name: 'update_exercise', required: ['exerciseId'] },
     { name: 'delete_exercise', required: ['exerciseId'] },
   ];
@@ -47,10 +47,18 @@ describe('tools', () => {
   }
 
   describe('add_exercise schema', () => {
-    it('should define unit as enum with lbs, kg, bodyweight', () => {
+    it('should define unit as enum with lbs, kg', () => {
       const tool = tools.find((t) => t.name === 'add_exercise')!;
       const props = (tool.input_schema as { properties: Record<string, { enum?: string[] }> }).properties;
-      expect(props.unit.enum).toEqual(['lbs', 'kg', 'bodyweight']);
+      expect(props.unit.enum).toEqual(['lbs', 'kg']);
+    });
+
+    it('should define exerciseType as enum', () => {
+      const tool = tools.find((t) => t.name === 'add_exercise')!;
+      const props = (tool.input_schema as { properties: Record<string, { enum?: string[] }> }).properties;
+      expect(props.exerciseType.enum).toContain('weight_reps');
+      expect(props.exerciseType.enum).toContain('duration');
+      expect(props.exerciseType.enum).toContain('band_reps');
     });
 
     it('should have videoUrl property', () => {

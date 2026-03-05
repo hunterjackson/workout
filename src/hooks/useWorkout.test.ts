@@ -22,8 +22,7 @@ describe('useWorkout', () => {
     const exercise = makeExercise(routineId, {
       name: 'Bench Press',
       sets: 3,
-      reps: '10',
-      weight: 135,
+      metrics: { reps: '10', weight: 135, unit: 'lbs' },
     });
     await db.exercises.add(exercise);
   });

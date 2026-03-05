@@ -57,9 +57,8 @@ export function makeExercise(routineId: string, overrides: Partial<Exercise> = {
     routineId,
     name: 'Bench Press',
     sets: 4,
-    reps: '8-10',
-    weight: 135,
-    unit: 'lbs',
+    exerciseType: 'weight_reps',
+    metrics: { weight: 135, reps: '8-10', unit: 'lbs' },
     restSeconds: 90,
     notes: 'Control the eccentric',
     order: 0,
@@ -85,9 +84,9 @@ export function makeWorkoutSet(workoutId: string, exerciseId: string, overrides:
     workoutId,
     exerciseId,
     exerciseName: 'Bench Press',
+    exerciseType: 'weight_reps',
     setNumber: 1,
-    reps: 10,
-    weight: 135,
+    metrics: { weight: 135, reps: 10, unit: 'lbs' },
     completed: true,
     ...overrides,
   };
@@ -114,8 +113,8 @@ export async function seedPlan() {
   await db.routines.bulkAdd([routine1, routine2]);
 
   const ex1 = makeExercise(routine1.id, { name: 'Bench Press', order: 0 });
-  const ex2 = makeExercise(routine1.id, { name: 'Overhead Press', weight: 95, order: 1 });
-  const ex3 = makeExercise(routine2.id, { name: 'Barbell Row', weight: 155, order: 0 });
+  const ex2 = makeExercise(routine1.id, { name: 'Overhead Press', metrics: { weight: 95, reps: '8-10', unit: 'lbs' }, order: 1 });
+  const ex3 = makeExercise(routine2.id, { name: 'Barbell Row', metrics: { weight: 155, reps: '8-10', unit: 'lbs' }, order: 0 });
   await db.exercises.bulkAdd([ex1, ex2, ex3]);
 
   return { plan, routines: [routine1, routine2], exercises: [ex1, ex2, ex3] };

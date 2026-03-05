@@ -1,4 +1,5 @@
 import type { Exercise } from '../lib/types';
+import { formatTemplateMetrics } from '../lib/format-metrics';
 import VideoLink from './VideoLink';
 import DeleteButton from './DeleteButton';
 
@@ -8,11 +9,10 @@ interface ExerciseItemProps {
 }
 
 export default function ExerciseItem({ exercise, onDelete }: ExerciseItemProps) {
-  const weightStr = exercise.unit === 'bodyweight'
-    ? 'BW'
-    : exercise.weight
-      ? `${exercise.weight} ${exercise.unit}`
-      : '';
+  const metricsStr = formatTemplateMetrics(
+    exercise.exerciseType,
+    exercise.metrics as unknown as Record<string, unknown>,
+  );
 
   return (
     <div className="flex items-center justify-between py-2 px-3 bg-bg/50 rounded-lg">
@@ -27,8 +27,7 @@ export default function ExerciseItem({ exercise, onDelete }: ExerciseItemProps) 
       </div>
       <div className="flex items-center gap-2">
         <div className="text-xs text-text-muted text-right whitespace-nowrap">
-          <div>{exercise.sets} × {exercise.reps}</div>
-          {weightStr && <div>{weightStr}</div>}
+          <div>{exercise.sets} × {metricsStr}</div>
         </div>
         {onDelete && <DeleteButton label={`Delete "${exercise.name}"?`} onConfirm={onDelete} />}
       </div>

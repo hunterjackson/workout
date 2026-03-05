@@ -1,6 +1,8 @@
 import { db } from './db';
 import { nanoid } from 'nanoid';
 import type { Routine, Exercise } from './types';
+import type { ExerciseType } from './exercise-types';
+import { buildTemplateMetrics } from './build-metrics';
 
 interface ToolCall {
   id: string;
@@ -81,19 +83,24 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
       }
 
       case 'add_exercise': {
-        const { routineId, name, sets, reps, weight, unit, restSeconds, notes, videoUrl } = toolCall.input as {
-          routineId: string; name: string; sets: number; reps: string;
-          weight?: number; unit?: string; restSeconds?: number; notes?: string; videoUrl?: string;
-        };
+        const input = toolCall.input as Record<string, unknown>;
+        const routineId = input.routineId as string;
+        const name = input.name as string;
+        const sets = input.sets as number;
+        const exerciseType = (input.exerciseType as ExerciseType) || 'weight_reps';
+        const restSeconds = input.restSeconds as number | undefined;
+        const notes = input.notes as string | undefined;
+        const videoUrl = input.videoUrl as string | undefined;
+
+        const metrics = buildTemplateMetrics(exerciseType, input);
         const existing = await db.exercises.where('routineId').equals(routineId).count();
         const exercise: Exercise = {
           id: nanoid(),
           routineId,
           name,
           sets,
-          reps: String(reps),
-          weight,
-          unit: (unit as Exercise['unit']) || 'lbs',
+          exerciseType,
+          metrics,
           restSeconds,
           notes,
           videoUrl,
@@ -111,7 +118,7 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
       }
 
       case 'update_exercise': {
-        const { exerciseId, ...updates } = toolCall.input as { exerciseId: string; [key: string]: unknown };
+        const { exerciseId, ...input } = toolCall.input as { exerciseId: string; [key: string]: unknown };
         const existingExercise = await db.exercises.get(exerciseId);
         if (!existingExercise) {
           return {
@@ -122,7 +129,29 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
             description: `Exercise not found`,
           };
         }
-        if (updates.reps !== undefined) updates.reps = String(updates.reps);
+
+        const updates: Record<string, unknown> = {};
+        if (input.name !== undefined) updates.name = input.name;
+        if (input.sets !== undefined) updates.sets = input.sets;
+        if (input.restSeconds !== undefined) updates.restSeconds = input.restSeconds;
+        if (input.notes !== undefined) updates.notes = input.notes;
+        if (input.videoUrl !== undefined) updates.videoUrl = input.videoUrl;
+
+        // If exerciseType is changing, rebuild metrics entirely
+        if (input.exerciseType !== undefined) {
+          updates.exerciseType = input.exerciseType;
+          updates.metrics = buildTemplateMetrics(input.exerciseType as ExerciseType, input);
+        } else {
+          // Update individual metric fields on the existing metrics
+          const hasMetricField = ['reps', 'weight', 'unit', 'durationSeconds', 'distanceMeters',
+            'calories', 'bandColor', 'rpe', 'tempo', 'machineLevel', 'heightCm', 'addedWeight']
+            .some(f => input[f] !== undefined);
+          if (hasMetricField) {
+            const merged = { ...(existingExercise.metrics as unknown as Record<string, unknown>), ...input };
+            updates.metrics = buildTemplateMetrics(existingExercise.exerciseType, merged);
+          }
+        }
+
         await db.exercises.update(exerciseId, updates);
         await db.plans.update(planId, { updatedAt: Date.now() });
         return {
@@ -130,7 +159,7 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
           toolName: toolCall.name,
           success: true,
           result: JSON.stringify({ exerciseId, updated: Object.keys(updates) }),
-          description: `Updated exercise${updates.name ? ` "${updates.name}"` : ''}`,
+          description: `Updated exercise${input.name ? ` "${input.name}"` : ''}`,
         };
       }
 

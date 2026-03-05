@@ -17,14 +17,15 @@ export interface Routine {
   createdAt: number;
 }
 
+import type { ExerciseType, TemplateMetrics, LoggedMetrics } from './exercise-types';
+
 export interface Exercise {
   id: string;
   routineId: string;
   name: string;
   sets: number;
-  reps: string; // string for ranges: "8-10", "AMRAP", "12"
-  weight?: number;
-  unit: 'lbs' | 'kg' | 'bodyweight';
+  exerciseType: ExerciseType;
+  metrics: TemplateMetrics;
   restSeconds?: number;
   notes?: string;
   videoUrl?: string;
@@ -46,9 +47,9 @@ export interface WorkoutSet {
   workoutId: string;
   exerciseId: string;
   exerciseName: string;
+  exerciseType: ExerciseType;
   setNumber: number;
-  reps: number;
-  weight?: number;
+  metrics: LoggedMetrics;
   completed: boolean;
 }
 

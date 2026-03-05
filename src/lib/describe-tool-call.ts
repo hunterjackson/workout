@@ -9,8 +9,11 @@ export function describeProposedToolCall(
       return input.name ? `Update routine "${input.name}"` : 'Update routine';
     case 'delete_routine':
       return 'Delete routine';
-    case 'add_exercise':
-      return `Add exercise "${input.name}" (${input.sets} x ${input.reps})`;
+    case 'add_exercise': {
+      const type = (input.exerciseType as string) || 'weight_reps';
+      const detail = input.reps ? `${input.sets} x ${input.reps}` : `${input.sets} sets`;
+      return `Add ${type} exercise "${input.name}" (${detail})`;
+    }
     case 'update_exercise':
       return input.name ? `Update exercise "${input.name}"` : 'Update exercise';
     case 'delete_exercise':

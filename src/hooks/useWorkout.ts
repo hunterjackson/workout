@@ -2,13 +2,15 @@ import { useState, useCallback } from 'react';
 import { nanoid } from 'nanoid';
 import { db } from '../lib/db';
 import type { Exercise, Workout, WorkoutSet } from '../lib/types';
+import type { ExerciseType, LoggedMetrics } from '../lib/exercise-types';
+import { templateToLoggedMetrics } from '../lib/template-to-logged';
 
-interface ActiveSet {
+export interface ActiveSet {
   exerciseId: string;
   exerciseName: string;
+  exerciseType: ExerciseType;
   setNumber: number;
-  reps: number;
-  weight: number;
+  metrics: LoggedMetrics;
   completed: boolean;
 }
 
@@ -33,9 +35,9 @@ export function useWorkout(planId: string) {
         initialSets.push({
           exerciseId: ex.id,
           exerciseName: ex.name,
+          exerciseType: ex.exerciseType,
           setNumber: s,
-          reps: parseInt(ex.reps) || 0,
-          weight: ex.unit === 'bodyweight' ? 0 : (ex.weight || 0),
+          metrics: templateToLoggedMetrics(ex.exerciseType, ex.metrics),
           completed: false,
         });
       }
@@ -85,9 +87,9 @@ export function useWorkout(planId: string) {
         workoutId,
         exerciseId: s.exerciseId,
         exerciseName: s.exerciseName,
+        exerciseType: s.exerciseType,
         setNumber: s.setNumber,
-        reps: s.reps,
-        weight: s.weight || undefined,
+        metrics: s.metrics,
         completed: true,
       }));
 
@@ -100,10 +102,10 @@ export function useWorkout(planId: string) {
   }, [workoutId, planId, selectedRoutineIds, sets, startedAt]);
 
   // Group sets by exercise for display
-  const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; sets: ActiveSet[] }>>(
+  const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; exerciseType: ExerciseType; sets: ActiveSet[] }>>(
     (acc, set) => {
       if (!acc[set.exerciseId]) {
-        acc[set.exerciseId] = { exerciseName: set.exerciseName, sets: [] };
+        acc[set.exerciseId] = { exerciseName: set.exerciseName, exerciseType: set.exerciseType, sets: [] };
       }
       acc[set.exerciseId].sets.push(set);
       return acc;
