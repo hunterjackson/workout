@@ -2,10 +2,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { tools } from './tools';
 import { serializePlan } from './plan-serializer';
 import { handleToolCall, type MutationResult } from './tool-handler';
-import { describeProposedToolCall } from './describe-tool-call';
-import type { ChatMessage, ProposedToolCall } from './types';
+import type { ChatMessage, ChatMode } from './types';
 
-const SYSTEM_PROMPT = `You are a knowledgeable, encouraging fitness coach and workout planner. You help users create and refine workout plans through conversation.
+const BASE_PROMPT = `You are a knowledgeable, encouraging fitness coach and workout planner. You help users create and refine workout plans through conversation.
 
 CAPABILITIES:
 - Create, update, and delete routines (workout day templates)
@@ -14,14 +13,23 @@ CAPABILITIES:
 - Suggest YouTube video URLs for exercise form demonstrations when you know good ones
 
 GUIDELINES:
-- When the user wants to create a plan, use tools to actually create the routines and exercises — don't just describe them
-- You can call multiple tools in a single response to batch-create routines and exercises
-- Always explain your reasoning briefly before making changes
+- Always explain your reasoning briefly
 - Be conversational and encouraging
 - When suggesting exercises, include sets, reps, and rest periods
 - For video URLs, include YouTube links for exercises when you're confident about good instructional videos
-- The user's preferred weight unit is: {UNIT}
-- The user will review and approve or reject your proposed changes before they are applied
+- The user's preferred weight unit is: {UNIT}`;
+
+const PLANNING_ADDENDUM = `
+
+MODE: PLANNING
+You are in PLANNING mode. Present what you would create or change in detail, but do NOT make any changes yet. Structure your response clearly so the user can review your plan before applying it. Use bullet points or numbered lists for clarity. The user will switch to updating mode when they're ready for you to apply the changes.`;
+
+const UPDATING_ADDENDUM = `
+
+MODE: UPDATING
+You are in UPDATING mode. Use tools to directly create, update, or delete routines and exercises as needed. You can call multiple tools in a single response to batch changes.`;
+
+const PLAN_STATE_SECTION = `
 
 CURRENT PLAN STATE:
 {PLAN_STATE}`;
@@ -31,8 +39,6 @@ export interface ChatResponse {
   mutations: MutationResult[];
 }
 
-export type OnToolCallsCallback = (proposed: ProposedToolCall[]) => Promise<boolean | string>;
-
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 
 export async function sendMessage(
@@ -40,7 +46,7 @@ export async function sendMessage(
   chatHistory: ChatMessage[],
   userMessage: string,
   model?: string,
-  onToolCalls?: OnToolCallsCallback,
+  mode: ChatMode = 'planning',
 ): Promise<ChatResponse> {
   const apiKey = localStorage.getItem('anthropic_api_key');
   if (!apiKey) throw new Error('No API key set. Go to Settings to add your Anthropic API key.');
@@ -53,7 +59,8 @@ export async function sendMessage(
     dangerouslyAllowBrowser: true,
   });
 
-  const systemPrompt = SYSTEM_PROMPT
+  const modeAddendum = mode === 'updating' ? UPDATING_ADDENDUM : PLANNING_ADDENDUM;
+  const systemPrompt = (BASE_PROMPT + modeAddendum + PLAN_STATE_SECTION)
     .replace('{UNIT}', unit)
     .replace('{PLAN_STATE}', planState ? JSON.stringify(planState, null, 2) : 'No plan data yet. The plan exists but has no routines or exercises.');
 
@@ -72,12 +79,14 @@ export async function sendMessage(
   let currentMessages = [...messages];
   const maxLoops = 10;
 
+  const isUpdating = mode === 'updating';
+
   for (let i = 0; i < maxLoops; i++) {
     const response = await client.messages.create({
       model: model || DEFAULT_MODEL,
       max_tokens: 4096,
       system: systemPrompt,
-      tools,
+      ...(isUpdating ? { tools } : {}),
       messages: currentMessages,
     });
 
@@ -89,6 +98,9 @@ export async function sendMessage(
       finalMessage += textBlocks.map((b) => b.text).join('\n');
     }
 
+    // In planning mode, there are no tools so no tool use blocks
+    if (!isUpdating) break;
+
     // Check for tool use
     const toolUseBlocks = response.content.filter(
       (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
@@ -98,50 +110,21 @@ export async function sendMessage(
       break;
     }
 
-    // If onToolCalls is provided, let the user review before executing
-    let reviewResult: boolean | string = true;
-    if (onToolCalls) {
-      const proposed: ProposedToolCall[] = toolUseBlocks.map((toolUse) => ({
+    // Execute tool calls directly in updating mode
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const toolUse of toolUseBlocks) {
+      const result = await handleToolCall(planId, {
         id: toolUse.id,
         name: toolUse.name,
         input: toolUse.input as Record<string, unknown>,
-        description: describeProposedToolCall(toolUse.name, toolUse.input as Record<string, unknown>),
-      }));
-      reviewResult = await onToolCalls(proposed);
-    }
-
-    const approved = reviewResult === true;
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
-
-    if (approved) {
-      // Execute tool calls
-      for (const toolUse of toolUseBlocks) {
-        const result = await handleToolCall(planId, {
-          id: toolUse.id,
-          name: toolUse.name,
-          input: toolUse.input as Record<string, unknown>,
-        });
-        allMutations.push(result);
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: toolUse.id,
-          content: result.result,
-          is_error: !result.success,
-        });
-      }
-    } else {
-      // User rejected — send rejection results to Claude
-      const feedback = typeof reviewResult === 'string' && reviewResult
-        ? `User rejected this proposed change. Feedback: ${reviewResult}`
-        : 'User rejected this proposed change.';
-      for (const toolUse of toolUseBlocks) {
-        toolResults.push({
-          type: 'tool_result',
-          tool_use_id: toolUse.id,
-          content: feedback,
-          is_error: true,
-        });
-      }
+      });
+      allMutations.push(result);
+      toolResults.push({
+        type: 'tool_result',
+        tool_use_id: toolUse.id,
+        content: result.result,
+        is_error: !result.success,
+      });
     }
 
     // Continue conversation with tool results

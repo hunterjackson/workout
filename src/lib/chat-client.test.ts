@@ -45,7 +45,7 @@ describe('sendMessage', () => {
     expect(response.mutations).toHaveLength(0);
   });
 
-  it('should pass tools and system prompt to Claude', async () => {
+  it('should pass tools and system prompt to Claude in updating mode', async () => {
     localStorage.setItem('anthropic_api_key', 'sk-test-key');
     localStorage.setItem('preferred_unit', 'kg');
 
@@ -54,7 +54,7 @@ describe('sendMessage', () => {
       stop_reason: 'end_turn',
     });
 
-    await sendMessage(planId, [], 'Hello');
+    await sendMessage(planId, [], 'Hello', undefined, 'updating');
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -90,7 +90,7 @@ describe('sendMessage', () => {
     expect(callArgs.messages[2]).toEqual({ role: 'user', content: 'Second message' });
   });
 
-  it('should handle tool use and execute tool calls', async () => {
+  it('should handle tool use and execute tool calls in updating mode', async () => {
     localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
     const routine = makeRoutine(planId, { name: 'Existing Routine' });
@@ -116,7 +116,7 @@ describe('sendMessage', () => {
       stop_reason: 'end_turn',
     });
 
-    const response = await sendMessage(planId, [], 'Add a leg day');
+    const response = await sendMessage(planId, [], 'Add a leg day', undefined, 'updating');
 
     expect(response.message).toContain('Let me create that for you.');
     expect(response.message).toContain('Done! I created Leg Day.');
@@ -208,40 +208,50 @@ describe('sendMessage', () => {
     expect(systemPrompt).toContain('Bench Press');
   });
 
-  describe('onToolCalls review callback', () => {
-    it('should call onToolCalls with proposed changes before executing', async () => {
+  describe('planning mode', () => {
+    it('should not pass tools to Claude in planning mode', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
-        content: [
-          { type: 'text', text: 'I will create a routine.' },
-          {
-            type: 'tool_use',
-            id: 'tool-1',
-            name: 'create_routine',
-            input: { name: 'Leg Day', schedule: [2, 4] },
-          },
-        ],
-        stop_reason: 'tool_use',
-      });
-
-      mockCreate.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'Done!' }],
+        content: [{ type: 'text', text: 'Here is my plan for your workout...' }],
         stop_reason: 'end_turn',
       });
 
-      const onToolCalls = vi.fn().mockResolvedValue(true);
+      await sendMessage(planId, [], 'Build me a plan', undefined, 'planning');
 
-      await sendMessage(planId, [], 'Add a leg day', undefined, onToolCalls);
-
-      expect(onToolCalls).toHaveBeenCalledOnce();
-      const proposed = onToolCalls.mock.calls[0][0];
-      expect(proposed).toHaveLength(1);
-      expect(proposed[0].name).toBe('create_routine');
-      expect(proposed[0].description).toBe('Create routine "Leg Day"');
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.tools).toBeUndefined();
     });
 
-    it('should execute tool calls when onToolCalls returns true', async () => {
+    it('should include planning instructions in system prompt', async () => {
+      localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+      mockCreate.mockResolvedValueOnce({
+        content: [{ type: 'text', text: 'Plan description...' }],
+        stop_reason: 'end_turn',
+      });
+
+      await sendMessage(planId, [], 'Build me a plan', undefined, 'planning');
+
+      const systemPrompt = mockCreate.mock.calls[0][0].system;
+      expect(systemPrompt).toContain('PLANNING');
+    });
+
+    it('should return no mutations in planning mode', async () => {
+      localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+      mockCreate.mockResolvedValueOnce({
+        content: [{ type: 'text', text: 'Here is what I would create...' }],
+        stop_reason: 'end_turn',
+      });
+
+      const response = await sendMessage(planId, [], 'Create a push pull plan', undefined, 'planning');
+      expect(response.mutations).toHaveLength(0);
+    });
+  });
+
+  describe('updating mode', () => {
+    it('should auto-execute tool calls without review callback', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
@@ -262,10 +272,8 @@ describe('sendMessage', () => {
         stop_reason: 'end_turn',
       });
 
-      const onToolCalls = vi.fn().mockResolvedValue(true);
-      const response = await sendMessage(planId, [], 'Create push day', undefined, onToolCalls);
+      const response = await sendMessage(planId, [], 'Create push day', undefined, 'updating');
 
-      // Tool was executed - routine should be in DB
       const routines = await db.routines.where('planId').equals(planId).toArray();
       expect(routines).toHaveLength(1);
       expect(routines[0].name).toBe('Push Day');
@@ -273,99 +281,36 @@ describe('sendMessage', () => {
       expect(response.mutations[0].success).toBe(true);
     });
 
-    it('should not execute tool calls when onToolCalls returns false', async () => {
+    it('should pass tools to Claude in updating mode', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
-        content: [
-          { type: 'text', text: 'Creating...' },
-          {
-            type: 'tool_use',
-            id: 'tool-1',
-            name: 'create_routine',
-            input: { name: 'Push Day', schedule: [1, 3, 5] },
-          },
-        ],
-        stop_reason: 'tool_use',
-      });
-
-      mockCreate.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'Understood, I won\'t make those changes.' }],
+        content: [{ type: 'text', text: 'Done!' }],
         stop_reason: 'end_turn',
       });
 
-      const onToolCalls = vi.fn().mockResolvedValue(false);
-      const response = await sendMessage(planId, [], 'Create push day', undefined, onToolCalls);
+      await sendMessage(planId, [], 'Create push day', undefined, 'updating');
 
-      // Tool was NOT executed - no routines in DB
-      const routines = await db.routines.where('planId').equals(planId).toArray();
-      expect(routines).toHaveLength(0);
-      expect(response.mutations).toHaveLength(0);
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.tools).toBeDefined();
+      expect(callArgs.tools.length).toBeGreaterThan(0);
     });
 
-    it('should send rejection results to Claude when user rejects', async () => {
+    it('should include updating instructions in system prompt', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
-        content: [
-          { type: 'text', text: 'Let me add exercises.' },
-          {
-            type: 'tool_use',
-            id: 'tool-1',
-            name: 'add_exercise',
-            input: { routineId: 'r1', name: 'Squat', sets: 4, reps: '8-10' },
-          },
-        ],
-        stop_reason: 'tool_use',
-      });
-
-      mockCreate.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'OK, changes discarded.' }],
+        content: [{ type: 'text', text: 'Done!' }],
         stop_reason: 'end_turn',
       });
 
-      const onToolCalls = vi.fn().mockResolvedValue(false);
-      await sendMessage(planId, [], 'Add squat', undefined, onToolCalls);
+      await sendMessage(planId, [], 'Do it', undefined, 'updating');
 
-      // Claude should have received rejection tool results
-      const secondCall = mockCreate.mock.calls[1][0];
-      const toolResults = secondCall.messages[secondCall.messages.length - 1].content;
-      expect(toolResults[0].is_error).toBe(true);
-      expect(toolResults[0].content).toContain('rejected');
+      const systemPrompt = mockCreate.mock.calls[0][0].system;
+      expect(systemPrompt).toContain('UPDATING');
     });
 
-    it('should include user feedback in rejection message when provided', async () => {
-      localStorage.setItem('anthropic_api_key', 'sk-test-key');
-
-      mockCreate.mockResolvedValueOnce({
-        content: [
-          { type: 'text', text: 'Let me add exercises.' },
-          {
-            type: 'tool_use',
-            id: 'tool-1',
-            name: 'add_exercise',
-            input: { routineId: 'r1', name: 'Squat', sets: 4, reps: '8-10' },
-          },
-        ],
-        stop_reason: 'tool_use',
-      });
-
-      mockCreate.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'I understand, let me adjust.' }],
-        stop_reason: 'end_turn',
-      });
-
-      const onToolCalls = vi.fn().mockResolvedValue('Too many sets, I prefer 3 sets');
-      await sendMessage(planId, [], 'Add squat', undefined, onToolCalls);
-
-      const secondCall = mockCreate.mock.calls[1][0];
-      const toolResults = secondCall.messages[secondCall.messages.length - 1].content;
-      expect(toolResults[0].is_error).toBe(true);
-      expect(toolResults[0].content).toContain('Too many sets, I prefer 3 sets');
-      expect(toolResults[0].content).toContain('rejected');
-    });
-
-    it('should handle multiple tool calls in a single response for review', async () => {
+    it('should handle multiple tool calls in updating mode', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
@@ -392,42 +337,24 @@ describe('sendMessage', () => {
         stop_reason: 'end_turn',
       });
 
-      const onToolCalls = vi.fn().mockResolvedValue(true);
-      await sendMessage(planId, [], 'Create full body', undefined, onToolCalls);
-
-      const proposed = onToolCalls.mock.calls[0][0];
-      expect(proposed).toHaveLength(2);
-      expect(proposed[0].name).toBe('create_routine');
-      expect(proposed[1].name).toBe('add_exercise');
+      const response = await sendMessage(planId, [], 'Create full body', undefined, 'updating');
+      expect(response.mutations).toHaveLength(2);
     });
+  });
 
-    it('should work without onToolCalls (backward compatible)', async () => {
+  describe('default mode', () => {
+    it('should default to planning mode when no mode specified', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
-        content: [
-          { type: 'text', text: 'Creating...' },
-          {
-            type: 'tool_use',
-            id: 'tool-1',
-            name: 'create_routine',
-            input: { name: 'Push Day', schedule: [1] },
-          },
-        ],
-        stop_reason: 'tool_use',
-      });
-
-      mockCreate.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'Done!' }],
+        content: [{ type: 'text', text: 'Here is my plan...' }],
         stop_reason: 'end_turn',
       });
 
-      // No onToolCalls callback - should auto-execute
-      const response = await sendMessage(planId, [], 'Create push day');
+      await sendMessage(planId, [], 'Build me a plan');
 
-      const routines = await db.routines.where('planId').equals(planId).toArray();
-      expect(routines).toHaveLength(1);
-      expect(response.mutations).toHaveLength(1);
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.tools).toBeUndefined();
     });
   });
 });
