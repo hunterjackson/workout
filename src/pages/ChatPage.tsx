@@ -4,7 +4,7 @@ import { useChat } from '../hooks/useChat';
 import ChatBubble from '../components/ChatBubble';
 import ChatInput from '../components/ChatInput';
 import MutationToast from '../components/MutationToast';
-import ProposedChanges from '../components/ProposedChanges';
+import ChatModeToggle from '../components/ChatModeToggle';
 import BackButton from '../components/BackButton';
 
 export default function ChatPage() {
@@ -14,18 +14,17 @@ export default function ChatPage() {
     messages,
     loading,
     mutations,
-    pendingReview,
+    mode,
     send,
     clearMutations,
-    approveChanges,
-    rejectChanges,
+    toggleMode,
   } = useChat(id!);
   const bottomRef = useRef<HTMLDivElement>(null);
   const hasApiKey = !!localStorage.getItem('anthropic_api_key');
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading, pendingReview]);
+  }, [messages, loading]);
 
   if (!hasApiKey) {
     return (
@@ -56,6 +55,9 @@ export default function ChatPage() {
       <div className="flex items-center gap-3 p-4 pb-0">
         <BackButton to={`/plan/${id}`} />
         <h1 className="text-2xl font-bold">Chat</h1>
+        <div className="ml-auto">
+          <ChatModeToggle mode={mode} onToggle={toggleMode} disabled={loading} />
+        </div>
       </div>
 
       {/* Messages */}
@@ -89,7 +91,7 @@ export default function ChatPage() {
           <ChatBubble key={msg.id} message={msg} />
         ))}
 
-        {loading && !pendingReview && (
+        {loading && (
           <div className="flex justify-start">
             <div className="bg-surface rounded-2xl rounded-bl-md px-4 py-3">
               <div className="flex gap-1">
@@ -103,15 +105,6 @@ export default function ChatPage() {
 
         <div ref={bottomRef} />
       </div>
-
-      {/* Proposed changes review */}
-      {pendingReview && (
-        <ProposedChanges
-          changes={pendingReview}
-          onApprove={approveChanges}
-          onReject={(feedback: string) => rejectChanges(feedback)}
-        />
-      )}
 
       {/* Mutation toast */}
       <MutationToast mutations={mutations} onDismiss={clearMutations} />

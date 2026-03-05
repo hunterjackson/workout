@@ -68,3 +68,5 @@ export interface ProposedToolCall {
   input: Record<string, unknown>;
   description: string;
 }
+
+export type ChatMode = 'planning' | 'updating';
