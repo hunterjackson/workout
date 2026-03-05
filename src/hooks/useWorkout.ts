@@ -6,6 +6,7 @@ import type { Exercise, Workout, WorkoutSet } from '../lib/types';
 interface ActiveSet {
   exerciseId: string;
   exerciseName: string;
+  exerciseNotes?: string;
   setNumber: number;
   reps: number;
   weight: number;
@@ -33,6 +34,7 @@ export function useWorkout(planId: string) {
         initialSets.push({
           exerciseId: ex.id,
           exerciseName: ex.name,
+          exerciseNotes: ex.notes,
           setNumber: s,
           reps: parseInt(ex.reps) || 0,
           weight: ex.unit === 'bodyweight' ? 0 : (ex.weight || 0),
@@ -100,10 +102,10 @@ export function useWorkout(planId: string) {
   }, [workoutId, planId, selectedRoutineIds, sets, startedAt]);
 
   // Group sets by exercise for display
-  const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; sets: ActiveSet[] }>>(
+  const exerciseGroups = sets.reduce<Record<string, { exerciseName: string; exerciseNotes?: string; sets: ActiveSet[] }>>(
     (acc, set) => {
       if (!acc[set.exerciseId]) {
-        acc[set.exerciseId] = { exerciseName: set.exerciseName, sets: [] };
+        acc[set.exerciseId] = { exerciseName: set.exerciseName, exerciseNotes: set.exerciseNotes, sets: [] };
       }
       acc[set.exerciseId].sets.push(set);
       return acc;
