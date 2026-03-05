@@ -115,6 +115,20 @@ export const tools: Anthropic.Tool[] = [
     },
   },
   {
+    name: 'update_plan_context',
+    description: 'Updates the plan-level context with important facts to remember about the user, their goals, preferences, injuries, or anything else relevant to future conversations. This context persists across chat sessions and is always available to you. Use this proactively whenever you learn something important about the user. You should update (not replace) the context — merge new facts with existing ones.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        context: {
+          type: 'string',
+          description: 'The full updated context string. Merge new information with any existing context rather than replacing it entirely.',
+        },
+      },
+      required: ['context'],
+    },
+  },
+  {
     name: 'delete_exercise',
     description: 'Removes an exercise from its routine.',
     input_schema: {

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePlan } from '../hooks/usePlan';
 import { db } from '../lib/db';
@@ -24,6 +25,8 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 export default function PlanDetailPage() {
   const { id } = useParams();
   const { plan, routines, getRoutineExercises } = usePlan(id);
+  const [editingContext, setEditingContext] = useState(false);
+  const [contextDraft, setContextDraft] = useState('');
 
   if (!plan) {
     return (
@@ -67,6 +70,54 @@ export default function PlanDetailPage() {
             <option key={opt.value} value={opt.value}>{opt.label}</option>
           ))}
         </select>
+      </div>
+
+      {/* AI Context */}
+      <div className="bg-surface rounded-xl p-4 mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wide">AI Context</h2>
+          {!editingContext && (
+            <button
+              aria-label="Edit context"
+              onClick={() => { setContextDraft(plan.context || ''); setEditingContext(true); }}
+              className="text-xs text-primary hover:text-primary/80"
+            >
+              Edit
+            </button>
+          )}
+        </div>
+        {editingContext ? (
+          <div>
+            <textarea
+              value={contextDraft}
+              onChange={(e) => setContextDraft(e.target.value)}
+              className="w-full bg-bg rounded-lg px-3 py-2 text-sm text-text outline-none focus:ring-2 focus:ring-primary min-h-[80px] resize-y"
+              placeholder="Important facts about your goals, preferences, injuries..."
+            />
+            <div className="flex gap-2 mt-2">
+              <button
+                aria-label="Save"
+                onClick={() => {
+                  db.plans.update(plan.id, { context: contextDraft, updatedAt: Date.now() });
+                  setEditingContext(false);
+                }}
+                className="text-xs bg-primary text-white px-3 py-1 rounded"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setEditingContext(false)}
+                className="text-xs text-text-muted px-3 py-1 rounded"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">
+            {plan.context || 'No context saved yet. Chat with AI to build context about your goals and preferences.'}
+          </p>
+        )}
       </div>
 
       {/* Weekly schedule overview */}

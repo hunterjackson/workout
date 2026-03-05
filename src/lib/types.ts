@@ -3,6 +3,7 @@ export interface Plan {
   name: string;
   goal?: string;
   model?: string;
+  context?: string;
   createdAt: number;
   updatedAt: number;
 }

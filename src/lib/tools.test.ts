@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { tools } from './tools';
 
 describe('tools', () => {
-  it('should define exactly 6 tools', () => {
-    expect(tools).toHaveLength(6);
+  it('should define exactly 7 tools', () => {
+    expect(tools).toHaveLength(7);
   });
 
   it('should have unique tool names', () => {
@@ -17,6 +17,7 @@ describe('tools', () => {
     { name: 'delete_routine', required: ['routineId'] },
     { name: 'add_exercise', required: ['routineId', 'name', 'sets'] },
     { name: 'update_exercise', required: ['exerciseId'] },
+    { name: 'update_plan_context', required: ['context'] },
     { name: 'delete_exercise', required: ['exerciseId'] },
   ];
 

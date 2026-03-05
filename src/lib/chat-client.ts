@@ -11,13 +11,15 @@ CAPABILITIES:
 - Add, update, and delete exercises within routines
 - Set weekly schedules for routines
 - Suggest YouTube video URLs for exercise form demonstrations when you know good ones
+- Remember important facts about the user by updating the plan context
 
 GUIDELINES:
 - Always explain your reasoning briefly
 - Be conversational and encouraging
 - When suggesting exercises, include sets, reps, and rest periods
 - For video URLs, include YouTube links for exercises when you're confident about good instructional videos
-- The user's preferred weight unit is: {UNIT}`;
+- The user's preferred weight unit is: {UNIT}
+- When you learn important facts about the user (injuries, preferences, experience level, schedule constraints, equipment access, etc.), use the update_plan_context tool to save them. This context persists across conversations so you can provide personalized advice.`;
 
 const PLANNING_ADDENDUM = `
 
@@ -28,6 +30,11 @@ const UPDATING_ADDENDUM = `
 
 MODE: UPDATING
 You are in UPDATING mode. Use tools to directly create, update, or delete routines and exercises as needed. You can call multiple tools in a single response to batch changes.`;
+
+const PLAN_CONTEXT_SECTION = `
+
+PLAN CONTEXT (important facts about the user and this plan):
+{PLAN_CONTEXT}`;
 
 const PLAN_STATE_SECTION = `
 
@@ -59,9 +66,11 @@ export async function sendMessage(
     dangerouslyAllowBrowser: true,
   });
 
+  const planContext = planState?.plan?.context || 'No context saved yet.';
   const modeAddendum = mode === 'updating' ? UPDATING_ADDENDUM : PLANNING_ADDENDUM;
-  const systemPrompt = (BASE_PROMPT + modeAddendum + PLAN_STATE_SECTION)
+  const systemPrompt = (BASE_PROMPT + modeAddendum + PLAN_CONTEXT_SECTION + PLAN_STATE_SECTION)
     .replace('{UNIT}', unit)
+    .replace('{PLAN_CONTEXT}', planContext)
     .replace('{PLAN_STATE}', planState ? JSON.stringify(planState, null, 2) : 'No plan data yet. The plan exists but has no routines or exercises.');
 
   // Build messages from chat history (last 50 messages for context window management)
