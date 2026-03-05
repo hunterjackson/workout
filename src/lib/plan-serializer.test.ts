@@ -39,9 +39,8 @@ describe('serializePlan', () => {
     const ex1 = makeExercise(routine.id, {
       name: 'Bench Press',
       sets: 4,
-      reps: '8-10',
-      weight: 135,
-      unit: 'lbs',
+      exerciseType: 'weight_reps',
+      metrics: { weight: 135, reps: '8-10', unit: 'lbs' },
       restSeconds: 90,
       notes: 'Arch your back',
       videoUrl: 'https://youtube.com/watch?v=abc',
@@ -50,8 +49,8 @@ describe('serializePlan', () => {
     const ex2 = makeExercise(routine.id, {
       name: 'Pushups',
       sets: 3,
-      reps: 'AMRAP',
-      unit: 'bodyweight',
+      exerciseType: 'bodyweight_reps',
+      metrics: { reps: 'AMRAP' },
       order: 1,
     });
     await db.exercises.bulkAdd([ex1, ex2]);
@@ -65,7 +64,7 @@ describe('serializePlan', () => {
     expect(result!.routines[0].notes).toBe('Go hard');
     expect(result!.routines[0].exercises).toHaveLength(2);
     expect(result!.routines[0].exercises[0].name).toBe('Bench Press');
-    expect(result!.routines[0].exercises[0].weight).toBe(135);
+    expect((result!.routines[0].exercises[0].metrics as Record<string, unknown>).weight).toBe(135);
     expect(result!.routines[0].exercises[1].name).toBe('Pushups');
   });
 
@@ -151,6 +150,7 @@ describe('serializePlan', () => {
     expect(serializedEx).toHaveProperty('id');
     expect(serializedEx).toHaveProperty('name');
     expect(serializedEx).toHaveProperty('sets');
-    expect(serializedEx).toHaveProperty('reps');
+    expect(serializedEx).toHaveProperty('exerciseType');
+    expect(serializedEx).toHaveProperty('metrics');
   });
 });

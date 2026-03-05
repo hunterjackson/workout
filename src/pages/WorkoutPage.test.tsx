@@ -77,8 +77,7 @@ describe('WorkoutPage', () => {
     const exercise = makeExercise(routine.id, {
       name: 'Bench Press',
       sets: 3,
-      reps: '10',
-      weight: 135,
+      metrics: { reps: '10', weight: 135, unit: 'lbs' },
     });
     await db.exercises.add(exercise);
 
@@ -101,7 +100,7 @@ describe('WorkoutPage', () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Back Test', schedule: [] });
     await db.routines.add(routine);
-    const exercise = makeExercise(routine.id, { name: 'Curl', sets: 1, reps: '10' });
+    const exercise = makeExercise(routine.id, { name: 'Curl', sets: 1, metrics: { reps: '10', unit: 'lbs' } });
     await db.exercises.add(exercise);
 
     renderWorkout();
@@ -128,7 +127,7 @@ describe('WorkoutPage', () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Test', schedule: [] });
     await db.routines.add(routine);
-    const exercise = makeExercise(routine.id, { name: 'Squat', sets: 2, reps: '5' });
+    const exercise = makeExercise(routine.id, { name: 'Squat', sets: 2, metrics: { reps: '5', unit: 'lbs' } });
     await db.exercises.add(exercise);
 
     renderWorkout();
@@ -147,7 +146,7 @@ describe('WorkoutPage', () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Day A', schedule: [] });
     await db.routines.add(routine);
-    const exercise = makeExercise(routine.id, { name: 'Exercise', sets: 1, reps: '1' });
+    const exercise = makeExercise(routine.id, { name: 'Exercise', sets: 1, metrics: { reps: '1', unit: 'lbs' } });
     await db.exercises.add(exercise);
 
     renderWorkout();
@@ -172,7 +171,7 @@ describe('WorkoutPage', () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Session', schedule: [] });
     await db.routines.add(routine);
-    const exercise = makeExercise(routine.id, { name: 'Lift', sets: 1, reps: '5' });
+    const exercise = makeExercise(routine.id, { name: 'Lift', sets: 1, metrics: { reps: '5', unit: 'lbs' } });
     await db.exercises.add(exercise);
 
     renderWorkout();
@@ -207,7 +206,7 @@ describe('WorkoutPage', () => {
     const exercise = makeExercise(routine.id, {
       name: 'Bench Press',
       sets: 1,
-      reps: '10',
+      metrics: { reps: '10', weight: 135, unit: 'lbs' },
       notes: 'Keep your elbows tucked',
     });
     await db.exercises.add(exercise);
@@ -233,7 +232,7 @@ describe('WorkoutPage', () => {
     const exercise = makeExercise(routine.id, {
       name: 'Squat',
       sets: 1,
-      reps: '10',
+      metrics: { reps: '10', weight: 135, unit: 'lbs' },
       notes: undefined,
     });
     await db.exercises.add(exercise);
@@ -259,7 +258,7 @@ describe('WorkoutPage', () => {
     const exercise = makeExercise(routine.id, {
       name: 'Deadlift',
       sets: 1,
-      reps: '5',
+      metrics: { reps: '5', weight: 225, unit: 'lbs' },
       notes: 'Hinge at the hips, keep back straight',
     });
     await db.exercises.add(exercise);
@@ -288,7 +287,7 @@ describe('WorkoutPage', () => {
     const exercise = makeExercise(routine.id, {
       name: 'Row',
       sets: 1,
-      reps: '8',
+      metrics: { reps: '8', weight: 135, unit: 'lbs' },
       notes: 'Squeeze at the top',
     });
     await db.exercises.add(exercise);
@@ -317,7 +316,7 @@ describe('WorkoutPage', () => {
     const user = userEvent.setup();
     const routine = makeRoutine(planId, { name: 'Overflow Test', schedule: [] });
     await db.routines.add(routine);
-    const exercise = makeExercise(routine.id, { name: 'Press', sets: 1, reps: '10', weight: 135 });
+    const exercise = makeExercise(routine.id, { name: 'Press', sets: 1, metrics: { reps: '10', weight: 135, unit: 'lbs' } });
     await db.exercises.add(exercise);
 
     renderWorkout();

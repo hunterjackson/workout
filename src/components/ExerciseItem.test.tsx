@@ -9,9 +9,8 @@ function makeEx(overrides: Partial<Exercise> = {}): Exercise {
     routineId: 'r-1',
     name: 'Bench Press',
     sets: 4,
-    reps: '8-10',
-    weight: 135,
-    unit: 'lbs',
+    exerciseType: 'weight_reps',
+    metrics: { weight: 135, reps: '8-10', unit: 'lbs' },
     restSeconds: 90,
     order: 0,
     ...overrides,
@@ -24,28 +23,28 @@ describe('ExerciseItem', () => {
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
   });
 
-  it('should render sets and reps', () => {
-    render(<ExerciseItem exercise={makeEx({ sets: 3, reps: '12' })} />);
-    expect(screen.getByText(/3 × 12/)).toBeInTheDocument();
+  it('should render sets and metrics', () => {
+    render(<ExerciseItem exercise={makeEx({ sets: 3, metrics: { reps: '12', unit: 'lbs' } })} />);
+    expect(screen.getByText(/3 × 12 reps/)).toBeInTheDocument();
   });
 
   it('should render weight with unit', () => {
-    render(<ExerciseItem exercise={makeEx({ weight: 200, unit: 'lbs' })} />);
-    expect(screen.getByText('200 lbs')).toBeInTheDocument();
+    render(<ExerciseItem exercise={makeEx({ metrics: { weight: 200, reps: '8-10', unit: 'lbs' } })} />);
+    expect(screen.getByText(/200 lbs/)).toBeInTheDocument();
   });
 
   it('should render kg unit', () => {
-    render(<ExerciseItem exercise={makeEx({ weight: 60, unit: 'kg' })} />);
-    expect(screen.getByText('60 kg')).toBeInTheDocument();
+    render(<ExerciseItem exercise={makeEx({ metrics: { weight: 60, reps: '8-10', unit: 'kg' } })} />);
+    expect(screen.getByText(/60 kg/)).toBeInTheDocument();
   });
 
   it('should render BW for bodyweight exercises', () => {
-    render(<ExerciseItem exercise={makeEx({ unit: 'bodyweight' })} />);
-    expect(screen.getByText('BW')).toBeInTheDocument();
+    render(<ExerciseItem exercise={makeEx({ exerciseType: 'bodyweight_reps', metrics: { reps: '10' } })} />);
+    expect(screen.getByText(/BW/)).toBeInTheDocument();
   });
 
   it('should not show weight for exercises without weight', () => {
-    const { container } = render(<ExerciseItem exercise={makeEx({ weight: undefined, unit: 'lbs' })} />);
+    const { container } = render(<ExerciseItem exercise={makeEx({ metrics: { reps: '8-10', unit: 'lbs' } })} />);
     expect(container.textContent).not.toContain('lbs');
   });
 
@@ -56,10 +55,9 @@ describe('ExerciseItem', () => {
 
   it('should not render notes when absent', () => {
     const { container } = render(<ExerciseItem exercise={makeEx({ notes: undefined })} />);
-    // No extra text elements beyond name, sets/reps
     const allText = container.textContent!;
     expect(allText).toContain('Bench Press');
-    expect(allText).toContain('4 × 8-10');
+    expect(allText).toContain('4 ×');
   });
 
   it('should render video link when videoUrl is present', () => {

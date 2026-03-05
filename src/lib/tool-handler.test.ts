@@ -29,7 +29,6 @@ describe('handleToolCall', () => {
       const parsed = JSON.parse(result.result);
       expect(parsed.name).toBe('Chest Day');
 
-      // Verify in DB
       const routines = await db.routines.where('planId').equals(planId).toArray();
       expect(routines).toHaveLength(1);
       expect(routines[0].name).toBe('Chest Day');
@@ -55,7 +54,6 @@ describe('handleToolCall', () => {
 
     it('should update plan updatedAt timestamp', async () => {
       const planBefore = await db.plans.get(planId);
-      // Small delay to ensure timestamp difference
       await new Promise((r) => setTimeout(r, 10));
 
       await handleToolCall(planId, {
@@ -175,6 +173,7 @@ describe('handleToolCall', () => {
           routineId,
           name: 'Squat',
           sets: 5,
+          exerciseType: 'weight_reps',
           reps: '5',
           weight: 225,
           unit: 'lbs',
@@ -190,9 +189,8 @@ describe('handleToolCall', () => {
       expect(exercises).toHaveLength(1);
       expect(exercises[0].name).toBe('Squat');
       expect(exercises[0].sets).toBe(5);
-      expect(exercises[0].reps).toBe('5');
-      expect(exercises[0].weight).toBe(225);
-      expect(exercises[0].unit).toBe('lbs');
+      expect(exercises[0].exerciseType).toBe('weight_reps');
+      expect(exercises[0].metrics).toEqual({ weight: 225, reps: '5', unit: 'lbs' });
       expect(exercises[0].restSeconds).toBe(180);
       expect(exercises[0].notes).toBe('Go deep');
       expect(exercises[0].videoUrl).toBe('https://youtube.com/watch?v=123');
@@ -206,10 +204,11 @@ describe('handleToolCall', () => {
       });
 
       const exercises = await db.exercises.where('routineId').equals(routineId).toArray();
-      expect(exercises[0].unit).toBe('lbs');
+      const m = exercises[0].metrics as Record<string, unknown>;
+      expect(m.unit).toBe('lbs');
     });
 
-    it('should convert numeric reps to string', async () => {
+    it('should convert numeric reps to string in metrics', async () => {
       await handleToolCall(planId, {
         id: 'tool-1',
         name: 'add_exercise',
@@ -217,7 +216,8 @@ describe('handleToolCall', () => {
       });
 
       const exercises = await db.exercises.where('routineId').equals(routineId).toArray();
-      expect(exercises[0].reps).toBe('12');
+      const m = exercises[0].metrics as Record<string, unknown>;
+      expect(m.reps).toBe('12');
     });
 
     it('should auto-increment order', async () => {
@@ -236,6 +236,44 @@ describe('handleToolCall', () => {
       expect(exercises[0].order).toBe(0);
       expect(exercises[1].order).toBe(1);
     });
+
+    it('should add a duration exercise', async () => {
+      const result = await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'add_exercise',
+        input: {
+          routineId,
+          name: 'Plank',
+          sets: 3,
+          exerciseType: 'duration',
+          durationSeconds: 60,
+        },
+      });
+
+      expect(result.success).toBe(true);
+      const exercises = await db.exercises.where('routineId').equals(routineId).toArray();
+      expect(exercises[0].exerciseType).toBe('duration');
+      expect(exercises[0].metrics).toEqual({ durationSeconds: 60 });
+    });
+
+    it('should add a band_reps exercise', async () => {
+      await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'add_exercise',
+        input: {
+          routineId,
+          name: 'Banded Pull-apart',
+          sets: 3,
+          exerciseType: 'band_reps',
+          bandColor: 'red',
+          reps: '15',
+        },
+      });
+
+      const exercises = await db.exercises.where('routineId').equals(routineId).toArray();
+      expect(exercises[0].exerciseType).toBe('band_reps');
+      expect(exercises[0].metrics).toEqual({ bandColor: 'red', reps: '15' });
+    });
   });
 
   describe('update_exercise', () => {
@@ -244,7 +282,7 @@ describe('handleToolCall', () => {
     beforeEach(async () => {
       const routine = makeRoutine(planId);
       await db.routines.add(routine);
-      const exercise = makeExercise(routine.id, { name: 'Original Ex', reps: '8' });
+      const exercise = makeExercise(routine.id, { name: 'Original Ex' });
       await db.exercises.add(exercise);
       exerciseId = exercise.id;
     });
@@ -260,7 +298,8 @@ describe('handleToolCall', () => {
       const exercise = await db.exercises.get(exerciseId);
       expect(exercise?.name).toBe('Updated Ex');
       expect(exercise?.sets).toBe(5);
-      expect(exercise?.weight).toBe(200);
+      const m = exercise?.metrics as Record<string, unknown>;
+      expect(m.weight).toBe(200);
     });
 
     it('should convert reps to string when updating', async () => {
@@ -271,7 +310,20 @@ describe('handleToolCall', () => {
       });
 
       const exercise = await db.exercises.get(exerciseId);
-      expect(exercise?.reps).toBe('15');
+      const m = exercise?.metrics as Record<string, unknown>;
+      expect(m.reps).toBe('15');
+    });
+
+    it('should change exercise type', async () => {
+      await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'update_exercise',
+        input: { exerciseId, exerciseType: 'duration', durationSeconds: 60 },
+      });
+
+      const exercise = await db.exercises.get(exerciseId);
+      expect(exercise?.exerciseType).toBe('duration');
+      expect(exercise?.metrics).toEqual({ durationSeconds: 60 });
     });
   });
 
@@ -309,15 +361,12 @@ describe('handleToolCall', () => {
 
   describe('error handling', () => {
     it('should catch and return errors gracefully', async () => {
-      // Try to update a non-existent routine - this won't throw in Dexie
-      // but we can force an error by using a bad table operation
       const result = await handleToolCall(planId, {
         id: 'tool-1',
         name: 'update_routine',
         input: { routineId: 'nonexistent' },
       });
 
-      // update_routine on nonexistent ID should report failure
       expect(result.success).toBe(false);
       expect(result.result).toContain('not found');
     });

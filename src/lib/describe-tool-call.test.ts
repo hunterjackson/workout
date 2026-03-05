@@ -33,8 +33,9 @@ describe('describeProposedToolCall', () => {
         name: 'Bench Press',
         sets: 4,
         reps: '8-10',
+        exerciseType: 'weight_reps',
       })
-    ).toBe('Add exercise "Bench Press" (4 x 8-10)');
+    ).toBe('Add weight_reps exercise "Bench Press" (4 x 8-10)');
   });
 
   it('should describe update_exercise with name', () => {

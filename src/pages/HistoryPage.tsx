@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../lib/db';
+import { formatLoggedMetrics } from '../lib/format-metrics';
 import BackButton from '../components/BackButton';
 import DeleteButton from '../components/DeleteButton';
 
@@ -60,7 +61,12 @@ export default function HistoryPage() {
           {workouts.map((workout) => {
             const sets = getWorkoutSets(workout.id);
             const totalSets = sets.length;
-            const totalVolume = sets.reduce((sum, s) => sum + (s.weight || 0) * s.reps, 0);
+            const totalVolume = sets.reduce((sum, s) => {
+              const m = s.metrics as unknown as Record<string, unknown>;
+              const w = (m.weight as number) || 0;
+              const r = (m.reps as number) || 0;
+              return sum + w * r;
+            }, 0);
             const isExpanded = expandedId === workout.id;
 
             // Group sets by exercise
@@ -115,8 +121,7 @@ export default function HistoryPage() {
                           {group.sets.map((set) => (
                             <div key={set.id} className="flex items-center gap-3 text-xs text-text-muted bg-bg/50 rounded-lg px-3 py-1.5">
                               <span>Set {set.setNumber}</span>
-                              <span>{set.reps} reps</span>
-                              {set.weight && <span>{set.weight} {localStorage.getItem('preferred_unit') || 'lbs'}</span>}
+                              <span>{formatLoggedMetrics(set.exerciseType, set.metrics as unknown as Record<string, unknown>)}</span>
                             </div>
                           ))}
                         </div>

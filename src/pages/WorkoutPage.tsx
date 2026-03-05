@@ -2,6 +2,10 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePlan } from '../hooks/usePlan';
 import { useWorkout } from '../hooks/useWorkout';
+import type { ActiveSet } from '../hooks/useWorkout';
+import type { LoggedMetrics } from '../lib/exercise-types';
+import SetInputRow from '../components/SetInputRow';
+import { getColumnHeaders } from '../lib/column-headers';
 import BackButton from '../components/BackButton';
 
 export default function WorkoutPage() {
@@ -74,6 +78,12 @@ export default function WorkoutPage() {
     navigate(`/plan/${id}/history`);
   };
 
+  // Determine grid columns based on exercise type
+  function getGridCols(colCount: number) {
+    if (colCount === 1) return 'grid-cols-[auto_1fr_auto]';
+    return 'grid-cols-[auto_1fr_1fr_auto]';
+  }
+
   return (
     <div className="min-h-full bg-bg p-4 pb-20">
       <div className="flex justify-between items-center mb-4">
@@ -104,68 +114,63 @@ export default function WorkoutPage() {
 
       {/* Exercises */}
       <div className="space-y-4">
-        {Object.entries(workout.exerciseGroups).map(([exerciseId, group]) => (
-          <div key={exerciseId} className="bg-surface rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="font-semibold">{group.exerciseName}</h3>
-              {group.exerciseNotes && (
-                <button
-                  onClick={() => setDescriptionDialog({ name: group.exerciseName, notes: group.exerciseNotes! })}
-                  aria-label="Show description"
-                  className="w-6 h-6 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-              )}
-            </div>
-            <div className="space-y-2">
-              <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 text-xs text-text-muted px-1">
-                <span>Set</span>
-                <span>Reps</span>
-                <span>Weight</span>
-                <span></span>
-              </div>
-              {group.sets.map((set) => (
-                <div
-                  key={set.setNumber}
-                  className={`grid grid-cols-[auto_1fr_1fr_auto] gap-2 items-center rounded-lg p-2 ${
-                    set.completed ? 'bg-success/10' : 'bg-bg/50'
-                  }`}
-                >
-                  <span className="text-sm text-text-muted w-6 text-center">{set.setNumber}</span>
-                  <input
-                    type="number"
-                    value={set.reps || ''}
-                    onChange={(e) =>
-                      workout.updateSet(exerciseId, set.setNumber, { reps: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full min-w-0 bg-surface-light rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <input
-                    type="number"
-                    value={set.weight || ''}
-                    onChange={(e) =>
-                      workout.updateSet(exerciseId, set.setNumber, { weight: parseFloat(e.target.value) || 0 })
-                    }
-                    className="w-full min-w-0 bg-surface-light rounded-lg px-3 py-2 text-sm text-center outline-none focus:ring-2 focus:ring-primary"
-                  />
+        {Object.entries(workout.exerciseGroups).map(([exerciseId, group]) => {
+          const headers = getColumnHeaders(group.exerciseType);
+          const gridCols = getGridCols(headers.length);
+
+          return (
+            <div key={exerciseId} className="bg-surface rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="font-semibold">{group.exerciseName}</h3>
+                {group.exerciseNotes && (
                   <button
-                    onClick={() => workout.toggleSet(exerciseId, set.setNumber)}
-                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                      set.completed ? 'bg-success text-white' : 'bg-surface-light text-text-muted'
-                    }`}
+                    onClick={() => setDescriptionDialog({ name: group.exerciseName, notes: group.exerciseNotes! })}
+                    aria-label="Show description"
+                    className="w-6 h-6 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </button>
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className={`grid ${gridCols} gap-2 text-xs text-text-muted px-1`}>
+                  <span>Set</span>
+                  {headers.map((h) => <span key={h}>{h}</span>)}
+                  <span></span>
                 </div>
-              ))}
+                {group.sets.map((set: ActiveSet) => (
+                  <div
+                    key={set.setNumber}
+                    className={`grid ${gridCols} gap-2 items-center rounded-lg p-2 ${
+                      set.completed ? 'bg-success/10' : 'bg-bg/50'
+                    }`}
+                  >
+                    <span className="text-sm text-text-muted w-6 text-center">{set.setNumber}</span>
+                    <SetInputRow
+                      exerciseType={set.exerciseType}
+                      metrics={set.metrics}
+                      onMetricsChange={(metrics: LoggedMetrics) =>
+                        workout.updateSet(exerciseId, set.setNumber, { metrics })
+                      }
+                    />
+                    <button
+                      onClick={() => workout.toggleSet(exerciseId, set.setNumber)}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        set.completed ? 'bg-success text-white' : 'bg-surface-light text-text-muted'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Complete button */}

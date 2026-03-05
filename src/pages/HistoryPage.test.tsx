@@ -69,8 +69,6 @@ describe('HistoryPage', () => {
 
     const ws = makeWorkoutSet(workout.id, 'ex-1', {
       exerciseName: 'Bench Press',
-      reps: 10,
-      weight: 135,
     });
     await db.workoutSets.add(ws);
 
@@ -78,7 +76,6 @@ describe('HistoryPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Push Day')).toBeInTheDocument();
     });
-    // workoutSets is a dependent live query; wait for it to resolve
     await waitFor(() => {
       expect(screen.getByText('1 sets')).toBeInTheDocument();
     });
@@ -98,7 +95,6 @@ describe('HistoryPage', () => {
     const routine = makeRoutine(planId, { name: 'Push' });
     await db.routines.add(routine);
 
-    // Create workouts on different dates with different completedAt times
     const older = makeWorkout(planId, [routine.id], {
       date: '2025-01-01',
       completedAt: 1000,
@@ -107,7 +103,6 @@ describe('HistoryPage', () => {
       date: '2025-06-15',
       completedAt: 2000,
     });
-    // Insert older first, then newer
     await db.workouts.bulkAdd([older, newer]);
 
     renderHistory();
@@ -115,7 +110,6 @@ describe('HistoryPage', () => {
     await waitFor(() => {
       const buttons = screen.getAllByRole('button');
       const dateTexts = buttons.map((b) => b.textContent).filter(Boolean);
-      // The newer date (Jun 15) should appear before the older date (Jan 1)
       const junIdx = dateTexts.findIndex((t) => t!.includes('Jun'));
       const janIdx = dateTexts.findIndex((t) => t!.includes('Jan'));
       expect(junIdx).toBeGreaterThan(-1);
@@ -134,8 +128,7 @@ describe('HistoryPage', () => {
     const ws = makeWorkoutSet(workout.id, 'ex-1', {
       exerciseName: 'Bench Press',
       setNumber: 1,
-      reps: 10,
-      weight: 135,
+      metrics: { weight: 135, reps: 10, unit: 'lbs' },
     });
     await db.workoutSets.add(ws);
 
@@ -151,7 +144,7 @@ describe('HistoryPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Bench Press')).toBeInTheDocument();
     });
-    expect(screen.getByText('10 reps')).toBeInTheDocument();
+    expect(screen.getByText('10 reps @ 135 lbs')).toBeInTheDocument();
   });
 
   describe('delete workout', () => {

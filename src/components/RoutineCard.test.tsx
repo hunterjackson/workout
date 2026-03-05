@@ -22,9 +22,8 @@ function makeExercise(overrides: Partial<Exercise> = {}): Exercise {
     routineId: 'r-1',
     name: 'Bench Press',
     sets: 4,
-    reps: '8-10',
-    weight: 135,
-    unit: 'lbs',
+    exerciseType: 'weight_reps',
+    metrics: { weight: 135, reps: '8-10', unit: 'lbs' },
     order: 0,
     ...overrides,
   };
@@ -62,7 +61,7 @@ describe('RoutineCard', () => {
   it('should not show exercises by default (collapsed)', () => {
     const exercises = [makeExercise({ name: 'Bench Press' })];
     render(<RoutineCard routine={makeRoutine()} exercises={exercises} />);
-    expect(screen.queryByText('4 × 8-10')).not.toBeInTheDocument();
+    expect(screen.queryByText(/4 × 8-10 reps/)).not.toBeInTheDocument();
   });
 
   it('should expand to show exercises on click', async () => {
@@ -72,7 +71,7 @@ describe('RoutineCard', () => {
 
     await user.click(screen.getByText('Push Day'));
     expect(screen.getByText('Bench Press')).toBeInTheDocument();
-    expect(screen.getByText(/4 × 8-10/)).toBeInTheDocument();
+    expect(screen.getByText(/4 × 8-10 reps/)).toBeInTheDocument();
   });
 
   it('should collapse on second click', async () => {
@@ -81,10 +80,10 @@ describe('RoutineCard', () => {
     render(<RoutineCard routine={makeRoutine()} exercises={exercises} />);
 
     await user.click(screen.getByText('Push Day'));
-    expect(screen.getByText(/4 × 8-10/)).toBeInTheDocument();
+    expect(screen.getByText(/4 × 8-10 reps/)).toBeInTheDocument();
 
     await user.click(screen.getByText('Push Day'));
-    expect(screen.queryByText(/4 × 8-10/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/4 × 8-10 reps/)).not.toBeInTheDocument();
   });
 
   it('should show empty state when expanded with no exercises', async () => {
