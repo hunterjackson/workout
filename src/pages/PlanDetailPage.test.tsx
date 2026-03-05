@@ -140,6 +140,82 @@ describe('PlanDetailPage', () => {
     });
   });
 
+  describe('plan context', () => {
+    it('should display plan context when present', async () => {
+      await db.plans.update(planId, { context: 'User has a bad knee. Prefers mornings.' });
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('User has a bad knee. Prefers mornings.')).toBeInTheDocument();
+      });
+    });
+
+    it('should show "No context saved yet" when context is empty', async () => {
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Test Plan')).toBeInTheDocument();
+      });
+      expect(screen.getByText('No context saved yet. Chat with AI to build context about your goals and preferences.')).toBeInTheDocument();
+    });
+
+    it('should show context section header', async () => {
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Test Plan')).toBeInTheDocument();
+      });
+      expect(screen.getByText('AI Context')).toBeInTheDocument();
+    });
+
+    it('should allow editing context', async () => {
+      await db.plans.update(planId, { context: 'Old context' });
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Old context')).toBeInTheDocument();
+      });
+
+      // Click edit button
+      await user.click(screen.getByRole('button', { name: /edit context/i }));
+
+      // Should show a textarea with the current context
+      const textarea = screen.getByRole('textbox');
+      expect(textarea).toHaveValue('Old context');
+
+      // Edit the context
+      await user.clear(textarea);
+      await user.type(textarea, 'New context');
+
+      // Save
+      await user.click(screen.getByRole('button', { name: /save/i }));
+
+      // Verify DB was updated
+      const updatedPlan = await db.plans.get(planId);
+      expect(updatedPlan?.context).toBe('New context');
+    });
+
+    it('should allow cancelling context edit', async () => {
+      await db.plans.update(planId, { context: 'Original context' });
+      const user = userEvent.setup();
+      renderPage();
+      await waitFor(() => {
+        expect(screen.getByText('Original context')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByRole('button', { name: /edit context/i }));
+      const textarea = screen.getByRole('textbox');
+      await user.clear(textarea);
+      await user.type(textarea, 'Changed text');
+
+      await user.click(screen.getByRole('button', { name: /cancel/i }));
+
+      // Should still show original context
+      expect(screen.getByText('Original context')).toBeInTheDocument();
+
+      // DB should not have changed
+      const plan = await db.plans.get(planId);
+      expect(plan?.context).toBe('Original context');
+    });
+  });
+
   describe('delete routine', () => {
     it('should show a delete button for each routine', async () => {
       await db.routines.add(makeRoutine(planId, { name: 'Push Day', schedule: [] }));

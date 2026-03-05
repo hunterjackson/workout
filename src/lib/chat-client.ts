@@ -12,6 +12,7 @@ CAPABILITIES:
 - Add, update, and delete exercises within routines
 - Set weekly schedules for routines
 - Suggest YouTube video URLs for exercise form demonstrations when you know good ones
+- Remember important facts about the user by updating the plan context
 
 GUIDELINES:
 - When the user wants to create a plan, use tools to actually create the routines and exercises — don't just describe them
@@ -22,6 +23,10 @@ GUIDELINES:
 - For video URLs, include YouTube links for exercises when you're confident about good instructional videos
 - The user's preferred weight unit is: {UNIT}
 - The user will review and approve or reject your proposed changes before they are applied
+- When you learn important facts about the user (injuries, preferences, experience level, schedule constraints, equipment access, etc.), use the update_plan_context tool to save them. This context persists across conversations so you can provide personalized advice.
+
+PLAN CONTEXT (important facts about the user and this plan):
+{PLAN_CONTEXT}
 
 CURRENT PLAN STATE:
 {PLAN_STATE}`;
@@ -53,8 +58,11 @@ export async function sendMessage(
     dangerouslyAllowBrowser: true,
   });
 
+  const planContext = planState?.plan?.context || 'No context saved yet.';
+
   const systemPrompt = SYSTEM_PROMPT
     .replace('{UNIT}', unit)
+    .replace('{PLAN_CONTEXT}', planContext)
     .replace('{PLAN_STATE}', planState ? JSON.stringify(planState, null, 2) : 'No plan data yet. The plan exists but has no routines or exercises.');
 
   // Build messages from chat history (last 50 messages for context window management)

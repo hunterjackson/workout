@@ -132,6 +132,22 @@ describe('serializePlan', () => {
     expect(days).toHaveLength(2);
   });
 
+  it('should include context in serialized plan when present', async () => {
+    const plan = makePlan({ name: 'Contextual Plan', context: 'User prefers morning workouts. Has a bad left knee.' });
+    await db.plans.add(plan);
+
+    const result = await serializePlan(plan.id);
+    expect(result!.plan.context).toBe('User prefers morning workouts. Has a bad left knee.');
+  });
+
+  it('should omit context from serialized plan when not set', async () => {
+    const plan = makePlan({ name: 'No Context Plan' });
+    await db.plans.add(plan);
+
+    const result = await serializePlan(plan.id);
+    expect(result!.plan.context).toBeUndefined();
+  });
+
   it('should not include internal fields (routineId, order) in exercise output', async () => {
     const plan = makePlan();
     await db.plans.add(plan);

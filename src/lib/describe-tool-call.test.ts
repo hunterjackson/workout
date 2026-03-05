@@ -56,6 +56,12 @@ describe('describeProposedToolCall', () => {
     ).toBe('Delete exercise');
   });
 
+  it('should describe update_plan_context', () => {
+    expect(
+      describeProposedToolCall('update_plan_context', { context: 'User prefers mornings' })
+    ).toBe('Update plan context');
+  });
+
   it('should handle unknown tool names', () => {
     expect(
       describeProposedToolCall('unknown_tool', {})

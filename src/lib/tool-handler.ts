@@ -163,6 +163,18 @@ export async function handleToolCall(planId: string, toolCall: ToolCall): Promis
         };
       }
 
+      case 'update_plan_context': {
+        const { context } = toolCall.input as { context: string };
+        await db.plans.update(planId, { context, updatedAt: Date.now() });
+        return {
+          toolUseId: toolCall.id,
+          toolName: toolCall.name,
+          success: true,
+          result: JSON.stringify({ planId, contextUpdated: true }),
+          description: 'Updated plan context',
+        };
+      }
+
       case 'delete_exercise': {
         const { exerciseId } = toolCall.input as { exerciseId: string };
         const exercise = await db.exercises.get(exerciseId);

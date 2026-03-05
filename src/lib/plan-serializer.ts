@@ -13,7 +13,7 @@ export async function serializePlan(planId: string) {
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
   return {
-    plan: { id: plan.id, name: plan.name, goal: plan.goal },
+    plan: { id: plan.id, name: plan.name, goal: plan.goal, context: plan.context },
     routines: routines.map((r) => ({
       id: r.id,
       name: r.name,

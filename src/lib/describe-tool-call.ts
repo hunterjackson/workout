@@ -18,6 +18,8 @@ export function describeProposedToolCall(
       return input.name ? `Update exercise "${input.name}"` : 'Update exercise';
     case 'delete_exercise':
       return 'Delete exercise';
+    case 'update_plan_context':
+      return 'Update plan context';
     default:
       return name;
   }

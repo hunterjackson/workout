@@ -346,6 +346,50 @@ describe('handleToolCall', () => {
     });
   });
 
+  describe('update_plan_context', () => {
+    it('should update the plan context', async () => {
+      const result = await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'update_plan_context',
+        input: { context: 'User is a beginner. Prefers bodyweight exercises.' },
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.description).toContain('context');
+
+      const plan = await db.plans.get(planId);
+      expect(plan?.context).toBe('User is a beginner. Prefers bodyweight exercises.');
+    });
+
+    it('should update plan updatedAt timestamp', async () => {
+      const planBefore = await db.plans.get(planId);
+      await new Promise((r) => setTimeout(r, 10));
+
+      await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'update_plan_context',
+        input: { context: 'Some context' },
+      });
+
+      const planAfter = await db.plans.get(planId);
+      expect(planAfter!.updatedAt).toBeGreaterThan(planBefore!.updatedAt);
+    });
+
+    it('should allow clearing context with empty string', async () => {
+      await db.plans.update(planId, { context: 'Old context' });
+
+      const result = await handleToolCall(planId, {
+        id: 'tool-1',
+        name: 'update_plan_context',
+        input: { context: '' },
+      });
+
+      expect(result.success).toBe(true);
+      const plan = await db.plans.get(planId);
+      expect(plan?.context).toBe('');
+    });
+  });
+
   describe('unknown tool', () => {
     it('should return failure for unknown tool name', async () => {
       const result = await handleToolCall(planId, {
