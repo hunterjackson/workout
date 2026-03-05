@@ -56,7 +56,7 @@ describe('ProposedChanges', () => {
     expect(onApprove).toHaveBeenCalledOnce();
   });
 
-  it('should call onReject when reject button is clicked', async () => {
+  it('should not call onReject immediately when reject button is clicked', async () => {
     const user = userEvent.setup();
     const onReject = vi.fn();
 
@@ -69,7 +69,7 @@ describe('ProposedChanges', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /reject/i }));
-    expect(onReject).toHaveBeenCalledOnce();
+    expect(onReject).not.toHaveBeenCalled();
   });
 
   it('should show a header indicating review is needed', () => {
@@ -82,6 +82,61 @@ describe('ProposedChanges', () => {
     );
 
     expect(screen.getByText(/proposed changes/i)).toBeInTheDocument();
+  });
+
+  it('should show feedback textarea when reject button is clicked', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ProposedChanges
+        changes={[makeProposed()]}
+        onApprove={vi.fn()}
+        onReject={vi.fn()}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /reject/i }));
+
+    expect(screen.getByPlaceholderText(/what would you change/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /skip/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /send feedback/i })).toBeInTheDocument();
+  });
+
+  it('should call onReject with feedback when send feedback is clicked', async () => {
+    const user = userEvent.setup();
+    const onReject = vi.fn();
+
+    render(
+      <ProposedChanges
+        changes={[makeProposed()]}
+        onApprove={vi.fn()}
+        onReject={onReject}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /reject/i }));
+    await user.type(screen.getByPlaceholderText(/what would you change/i), 'Too many sets');
+    await user.click(screen.getByRole('button', { name: /send feedback/i }));
+
+    expect(onReject).toHaveBeenCalledWith('Too many sets');
+  });
+
+  it('should call onReject with empty string when skip is clicked', async () => {
+    const user = userEvent.setup();
+    const onReject = vi.fn();
+
+    render(
+      <ProposedChanges
+        changes={[makeProposed()]}
+        onApprove={vi.fn()}
+        onReject={onReject}
+      />
+    );
+
+    await user.click(screen.getByRole('button', { name: /reject/i }));
+    await user.click(screen.getByRole('button', { name: /skip/i }));
+
+    expect(onReject).toHaveBeenCalledWith('');
   });
 
   it('should show icon for different tool types', () => {

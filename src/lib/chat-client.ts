@@ -31,7 +31,7 @@ export interface ChatResponse {
   mutations: MutationResult[];
 }
 
-export type OnToolCallsCallback = (proposed: ProposedToolCall[]) => Promise<boolean>;
+export type OnToolCallsCallback = (proposed: ProposedToolCall[]) => Promise<boolean | string>;
 
 const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 
@@ -99,7 +99,7 @@ export async function sendMessage(
     }
 
     // If onToolCalls is provided, let the user review before executing
-    let approved = true;
+    let reviewResult: boolean | string = true;
     if (onToolCalls) {
       const proposed: ProposedToolCall[] = toolUseBlocks.map((toolUse) => ({
         id: toolUse.id,
@@ -107,9 +107,10 @@ export async function sendMessage(
         input: toolUse.input as Record<string, unknown>,
         description: describeProposedToolCall(toolUse.name, toolUse.input as Record<string, unknown>),
       }));
-      approved = await onToolCalls(proposed);
+      reviewResult = await onToolCalls(proposed);
     }
 
+    const approved = reviewResult === true;
     const toolResults: Anthropic.ToolResultBlockParam[] = [];
 
     if (approved) {
@@ -130,11 +131,14 @@ export async function sendMessage(
       }
     } else {
       // User rejected — send rejection results to Claude
+      const feedback = typeof reviewResult === 'string' && reviewResult
+        ? `User rejected this proposed change. Feedback: ${reviewResult}`
+        : 'User rejected this proposed change.';
       for (const toolUse of toolUseBlocks) {
         toolResults.push({
           type: 'tool_result',
           tool_use_id: toolUse.id,
-          content: 'User rejected this proposed change.',
+          content: feedback,
           is_error: true,
         });
       }
