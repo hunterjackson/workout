@@ -11,6 +11,7 @@ export default function WorkoutPage() {
   const workout = useWorkout(id!);
   const [showComplete, setShowComplete] = useState(false);
   const [notes, setNotes] = useState('');
+  const [descriptionDialog, setDescriptionDialog] = useState<{ name: string; notes: string } | null>(null);
 
   const todaysRoutines = getTodaysRoutines();
 
@@ -105,7 +106,20 @@ export default function WorkoutPage() {
       <div className="space-y-4">
         {Object.entries(workout.exerciseGroups).map(([exerciseId, group]) => (
           <div key={exerciseId} className="bg-surface rounded-xl p-4">
-            <h3 className="font-semibold mb-3">{group.exerciseName}</h3>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="font-semibold">{group.exerciseName}</h3>
+              {group.exerciseNotes && (
+                <button
+                  onClick={() => setDescriptionDialog({ name: group.exerciseName, notes: group.exerciseNotes! })}
+                  aria-label="Show description"
+                  className="w-6 h-6 rounded-full bg-primary/15 text-primary flex items-center justify-center shrink-0"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+              )}
+            </div>
             <div className="space-y-2">
               <div className="grid grid-cols-[auto_1fr_1fr_auto] gap-2 text-xs text-text-muted px-1">
                 <span>Set</span>
@@ -161,6 +175,23 @@ export default function WorkoutPage() {
       >
         Finish Workout
       </button>
+
+      {/* Description dialog */}
+      {descriptionDialog && (
+        <div className="fixed inset-0 bg-black/60 flex items-center z-50 p-4" onClick={() => setDescriptionDialog(null)}>
+          <div className="bg-surface w-full max-w-sm mx-auto rounded-2xl p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-semibold mb-3">{descriptionDialog.name}</h2>
+            <p className="text-text-muted text-sm mb-4">{descriptionDialog.notes}</p>
+            <button
+              onClick={() => setDescriptionDialog(null)}
+              aria-label="Close"
+              className="w-full py-3 rounded-xl bg-surface-light text-text font-medium"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Complete modal */}
       {showComplete && (
