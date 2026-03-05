@@ -12,14 +12,14 @@ export function useChat(planId: string) {
   const [mutations, setMutations] = useState<MutationResult[]>([]);
   const [pendingReview, setPendingReview] = useState<ProposedToolCall[] | null>(null);
 
-  const reviewResolverRef = useRef<((approved: boolean) => void) | null>(null);
+  const reviewResolverRef = useRef<((result: boolean | string) => void) | null>(null);
 
   const messages = useLiveQuery(
     () => db.chatMessages.where('planId').equals(planId).sortBy('createdAt'),
     [planId]
   ) ?? [];
 
-  const handleToolCalls = useCallback(async (proposed: ProposedToolCall[]): Promise<boolean> => {
+  const handleToolCalls = useCallback(async (proposed: ProposedToolCall[]): Promise<boolean | string> => {
     return new Promise((resolve) => {
       setPendingReview(proposed);
       reviewResolverRef.current = resolve;
@@ -32,8 +32,8 @@ export function useChat(planId: string) {
     setPendingReview(null);
   }, []);
 
-  const rejectChanges = useCallback(() => {
-    reviewResolverRef.current?.(false);
+  const rejectChanges = useCallback((feedback: string = '') => {
+    reviewResolverRef.current?.(feedback || false);
     reviewResolverRef.current = null;
     setPendingReview(null);
   }, []);

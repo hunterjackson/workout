@@ -109,7 +109,7 @@ export default function ChatPage() {
         <ProposedChanges
           changes={pendingReview}
           onApprove={approveChanges}
-          onReject={rejectChanges}
+          onReject={(feedback: string) => rejectChanges(feedback)}
         />
       )}
 

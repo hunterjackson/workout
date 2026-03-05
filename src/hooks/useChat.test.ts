@@ -192,9 +192,9 @@ describe('useChat', () => {
 
     expect(result.current.pendingReview).not.toBeNull();
 
-    // Reject changes
+    // Reject changes with feedback
     await act(async () => {
-      result.current.rejectChanges();
+      result.current.rejectChanges('Too many exercises');
     });
 
     await act(async () => {
