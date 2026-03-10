@@ -209,7 +209,7 @@ describe('sendMessage', () => {
   });
 
   describe('planning mode', () => {
-    it('should not pass tools to Claude in planning mode', async () => {
+    it('should only pass web tools in planning mode (no user-defined tools)', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
@@ -220,7 +220,13 @@ describe('sendMessage', () => {
       await sendMessage(planId, [], 'Build me a plan', undefined, 'planning');
 
       const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.tools).toBeUndefined();
+      expect(callArgs.tools).toHaveLength(2);
+      expect(callArgs.tools).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
+          expect.objectContaining({ type: 'web_fetch_20260209', name: 'web_fetch' }),
+        ])
+      );
     });
 
     it('should include planning instructions in system prompt', async () => {
@@ -342,6 +348,62 @@ describe('sendMessage', () => {
     });
   });
 
+  describe('web search and web fetch', () => {
+    it('should include web search and web fetch tools in all API calls', async () => {
+      localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+      mockCreate.mockResolvedValueOnce({
+        content: [{ type: 'text', text: 'Response' }],
+        stop_reason: 'end_turn',
+      });
+
+      await sendMessage(planId, [], 'Hello');
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.tools).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'web_search_20250305',
+            name: 'web_search',
+          }),
+          expect.objectContaining({
+            type: 'web_fetch_20260209',
+            name: 'web_fetch',
+            max_content_tokens: 8192,
+          }),
+        ])
+      );
+    });
+
+    it('should include web search and web fetch tools alongside other tools in updating mode', async () => {
+      localStorage.setItem('anthropic_api_key', 'sk-test-key');
+
+      mockCreate.mockResolvedValueOnce({
+        content: [{ type: 'text', text: 'Response' }],
+        stop_reason: 'end_turn',
+      });
+
+      await sendMessage(planId, [], 'Hello', undefined, 'updating');
+
+      const callArgs = mockCreate.mock.calls[0][0];
+      expect(callArgs.tools).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            type: 'web_search_20250305',
+            name: 'web_search',
+          }),
+          expect.objectContaining({
+            type: 'web_fetch_20260209',
+            name: 'web_fetch',
+            max_content_tokens: 8192,
+          }),
+        ])
+      );
+      // Should also still have the user-defined tools
+      expect(callArgs.tools.length).toBeGreaterThan(2);
+    });
+  });
+
   describe('default mode', () => {
     it('should default to planning mode when no mode specified', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
@@ -354,7 +416,14 @@ describe('sendMessage', () => {
       await sendMessage(planId, [], 'Build me a plan');
 
       const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.tools).toBeUndefined();
+      // Should only have web tools, no user-defined tools
+      expect(callArgs.tools).toHaveLength(2);
+      expect(callArgs.tools).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
+          expect.objectContaining({ type: 'web_fetch_20260209', name: 'web_fetch' }),
+        ])
+      );
     });
   });
 });
