@@ -46,7 +46,7 @@ export interface ChatResponse {
   mutations: MutationResult[];
 }
 
-const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+const DEFAULT_MODEL = 'claude-sonnet-4-latest';
 
 export async function sendMessage(
   planId: string,
