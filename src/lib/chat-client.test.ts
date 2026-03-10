@@ -58,7 +58,7 @@ describe('sendMessage', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-latest',
         max_tokens: 4096,
         tools: expect.any(Array),
         system: expect.stringContaining('kg'),
@@ -162,16 +162,16 @@ describe('sendMessage', () => {
       stop_reason: 'end_turn',
     });
 
-    await sendMessage(planId, [], 'Hello', 'claude-haiku-4-5-20251001');
+    await sendMessage(planId, [], 'Hello', 'claude-haiku-4-5-latest');
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-haiku-4-5-latest',
       })
     );
   });
 
-  it('should default to claude-sonnet-4-20250514 when no model provided', async () => {
+  it('should default to claude-sonnet-4-latest when no model provided', async () => {
     localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
     mockCreate.mockResolvedValueOnce({
@@ -183,7 +183,7 @@ describe('sendMessage', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-latest',
       })
     );
   });
@@ -224,7 +224,7 @@ describe('sendMessage', () => {
       expect(callArgs.tools).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
-          expect.objectContaining({ type: 'web_fetch_20260209', name: 'web_fetch' }),
+          expect.objectContaining({ type: 'web_fetch_20250910', name: 'web_fetch' }),
         ])
       );
     });
@@ -367,7 +367,7 @@ describe('sendMessage', () => {
             name: 'web_search',
           }),
           expect.objectContaining({
-            type: 'web_fetch_20260209',
+            type: 'web_fetch_20250910',
             name: 'web_fetch',
             max_content_tokens: 8192,
           }),
@@ -393,7 +393,7 @@ describe('sendMessage', () => {
             name: 'web_search',
           }),
           expect.objectContaining({
-            type: 'web_fetch_20260209',
+            type: 'web_fetch_20250910',
             name: 'web_fetch',
             max_content_tokens: 8192,
           }),
@@ -421,7 +421,7 @@ describe('sendMessage', () => {
       expect(callArgs.tools).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
-          expect.objectContaining({ type: 'web_fetch_20260209', name: 'web_fetch' }),
+          expect.objectContaining({ type: 'web_fetch_20250910', name: 'web_fetch' }),
         ])
       );
     });

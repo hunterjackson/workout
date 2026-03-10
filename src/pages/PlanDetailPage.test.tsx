@@ -112,15 +112,15 @@ describe('PlanDetailPage', () => {
         expect(screen.getByText('Test Plan')).toBeInTheDocument();
       });
       const select = screen.getByLabelText('AI Model') as HTMLSelectElement;
-      expect(select.value).toBe('claude-sonnet-4-20250514');
+      expect(select.value).toBe('claude-sonnet-4-latest');
     });
 
     it('should show the plan model when set', async () => {
-      await db.plans.update(planId, { model: 'claude-haiku-4-5-20251001' });
+      await db.plans.update(planId, { model: 'claude-haiku-4-5-latest' });
       renderPage();
       await waitFor(() => {
         const select = screen.getByLabelText('AI Model') as HTMLSelectElement;
-        expect(select.value).toBe('claude-haiku-4-5-20251001');
+        expect(select.value).toBe('claude-haiku-4-5-latest');
       });
     });
 
@@ -132,11 +132,11 @@ describe('PlanDetailPage', () => {
       });
 
       const select = screen.getByLabelText('AI Model');
-      await user.selectOptions(select, 'claude-haiku-4-5-20251001');
+      await user.selectOptions(select, 'claude-haiku-4-5-latest');
 
       // Verify DB was updated
       const updatedPlan = await db.plans.get(planId);
-      expect(updatedPlan?.model).toBe('claude-haiku-4-5-20251001');
+      expect(updatedPlan?.model).toBe('claude-haiku-4-5-latest');
     });
   });
 

@@ -46,7 +46,7 @@ export interface ChatResponse {
   mutations: MutationResult[];
 }
 
-const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+const DEFAULT_MODEL = 'claude-sonnet-4-latest';
 
 export async function sendMessage(
   planId: string,
@@ -92,7 +92,7 @@ export async function sendMessage(
 
   const webTools = [
     { type: 'web_search_20250305' as const, name: 'web_search' as const },
-    { type: 'web_fetch_20260209' as const, name: 'web_fetch' as const, max_content_tokens: 8192 },
+    { type: 'web_fetch_20250910' as const, name: 'web_fetch' as const, max_content_tokens: 8192 },
   ];
 
   for (let i = 0; i < maxLoops; i++) {
