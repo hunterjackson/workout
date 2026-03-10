@@ -90,12 +90,14 @@ export async function sendMessage(
 
   const isUpdating = mode === 'updating';
 
+  const webSearchTool = { type: 'web_search_20250305' as const, name: 'web_search' as const };
+
   for (let i = 0; i < maxLoops; i++) {
     const response = await client.messages.create({
       model: model || DEFAULT_MODEL,
       max_tokens: 4096,
       system: systemPrompt,
-      ...(isUpdating ? { tools } : {}),
+      tools: isUpdating ? [...tools, webSearchTool] : [webSearchTool],
       messages: currentMessages,
     });
 
