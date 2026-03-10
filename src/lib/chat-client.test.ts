@@ -224,7 +224,7 @@ describe('sendMessage', () => {
       expect(callArgs.tools).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
-          expect.objectContaining({ type: 'web_fetch_20260209', name: 'web_fetch' }),
+          expect.objectContaining({ type: 'web_fetch_20250910', name: 'web_fetch' }),
         ])
       );
     });
@@ -367,7 +367,7 @@ describe('sendMessage', () => {
             name: 'web_search',
           }),
           expect.objectContaining({
-            type: 'web_fetch_20260209',
+            type: 'web_fetch_20250910',
             name: 'web_fetch',
             max_content_tokens: 8192,
           }),
@@ -393,7 +393,7 @@ describe('sendMessage', () => {
             name: 'web_search',
           }),
           expect.objectContaining({
-            type: 'web_fetch_20260209',
+            type: 'web_fetch_20250910',
             name: 'web_fetch',
             max_content_tokens: 8192,
           }),
@@ -421,7 +421,7 @@ describe('sendMessage', () => {
       expect(callArgs.tools).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
-          expect.objectContaining({ type: 'web_fetch_20260209', name: 'web_fetch' }),
+          expect.objectContaining({ type: 'web_fetch_20250910', name: 'web_fetch' }),
         ])
       );
     });
