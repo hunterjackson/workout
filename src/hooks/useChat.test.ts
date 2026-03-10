@@ -46,7 +46,7 @@ describe('useChat', () => {
 
   it('should pass plan model to sendMessage', async () => {
     await resetDb();
-    const plan = makePlan({ model: 'claude-haiku-4-5-latest' });
+    const plan = makePlan({ model: 'claude-haiku-4-5' });
     await db.plans.add(plan);
 
     mockSendMessage.mockResolvedValueOnce({
@@ -61,7 +61,7 @@ describe('useChat', () => {
     });
 
     const [, , , model] = mockSendMessage.mock.calls[0];
-    expect(model).toBe('claude-haiku-4-5-latest');
+    expect(model).toBe('claude-haiku-4-5');
   });
 
   it('should pass undefined model when plan has no model set', async () => {

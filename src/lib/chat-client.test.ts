@@ -58,7 +58,7 @@ describe('sendMessage', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-sonnet-4-latest',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4096,
         tools: expect.any(Array),
         system: expect.stringContaining('kg'),
@@ -162,16 +162,16 @@ describe('sendMessage', () => {
       stop_reason: 'end_turn',
     });
 
-    await sendMessage(planId, [], 'Hello', 'claude-haiku-4-5-latest');
+    await sendMessage(planId, [], 'Hello', 'claude-haiku-4-5');
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-haiku-4-5-latest',
+        model: 'claude-haiku-4-5',
       })
     );
   });
 
-  it('should default to claude-sonnet-4-latest when no model provided', async () => {
+  it('should default to claude-sonnet-4-6 when no model provided', async () => {
     localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
     mockCreate.mockResolvedValueOnce({
@@ -183,7 +183,7 @@ describe('sendMessage', () => {
 
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
-        model: 'claude-sonnet-4-latest',
+        model: 'claude-sonnet-4-6',
       })
     );
   });

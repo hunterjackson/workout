@@ -15,9 +15,9 @@ const deleteExercise = async (exerciseId: string) => {
 };
 
 const MODEL_OPTIONS = [
-  { value: 'claude-sonnet-4-latest', label: 'Claude Sonnet' },
-  { value: 'claude-haiku-4-5-latest', label: 'Claude Haiku' },
-  { value: 'claude-opus-4-latest', label: 'Claude Opus' },
+  { value: 'claude-sonnet-4-6', label: 'Claude Sonnet' },
+  { value: 'claude-haiku-4-5', label: 'Claude Haiku' },
+  { value: 'claude-opus-4-6', label: 'Claude Opus' },
 ];
 
 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -62,7 +62,7 @@ export default function PlanDetailPage() {
         </label>
         <select
           id="model-select"
-          value={plan.model || 'claude-sonnet-4-latest'}
+          value={plan.model || 'claude-sonnet-4-6'}
           onChange={(e) => db.plans.update(plan.id, { model: e.target.value, updatedAt: Date.now() })}
           className="w-full mt-2 bg-bg rounded-lg px-3 py-2 text-sm text-text outline-none focus:ring-2 focus:ring-primary"
         >
