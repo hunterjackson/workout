@@ -209,7 +209,7 @@ describe('sendMessage', () => {
   });
 
   describe('planning mode', () => {
-    it('should only pass web tools in planning mode (no user-defined tools)', async () => {
+    it('should not pass any tools in planning mode', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
@@ -220,13 +220,7 @@ describe('sendMessage', () => {
       await sendMessage(planId, [], 'Build me a plan', undefined, 'planning');
 
       const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.tools).toHaveLength(2);
-      expect(callArgs.tools).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
-          expect.objectContaining({ type: 'web_fetch_20250910', name: 'web_fetch' }),
-        ])
-      );
+      expect(callArgs.tools).toBeUndefined();
     });
 
     it('should include planning instructions in system prompt', async () => {
@@ -348,34 +342,24 @@ describe('sendMessage', () => {
     });
   });
 
-  describe('web search and web fetch', () => {
-    it('should include web search and web fetch tools in all API calls', async () => {
+  describe('tools in planning mode', () => {
+    it('should not include any tools in planning mode', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
-        content: [{ type: 'text', text: 'Response' }],
+        content: [{ type: 'text', text: 'Here is my plan...' }],
         stop_reason: 'end_turn',
       });
 
-      await sendMessage(planId, [], 'Hello');
+      await sendMessage(planId, [], 'Build me a plan');
 
       const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.tools).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            type: 'web_search_20250305',
-            name: 'web_search',
-          }),
-          expect.objectContaining({
-            type: 'web_fetch_20250910',
-            name: 'web_fetch',
-            max_content_tokens: 8192,
-          }),
-        ])
-      );
+      expect(callArgs.tools).toBeUndefined();
     });
+  });
 
-    it('should include web search and web fetch tools alongside other tools in updating mode', async () => {
+  describe('tools in updating mode', () => {
+    it('should only include user-defined tools in updating mode (no server tools)', async () => {
       localStorage.setItem('anthropic_api_key', 'sk-test-key');
 
       mockCreate.mockResolvedValueOnce({
@@ -386,21 +370,14 @@ describe('sendMessage', () => {
       await sendMessage(planId, [], 'Hello', undefined, 'updating');
 
       const callArgs = mockCreate.mock.calls[0][0];
-      expect(callArgs.tools).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            type: 'web_search_20250305',
-            name: 'web_search',
-          }),
-          expect.objectContaining({
-            type: 'web_fetch_20250910',
-            name: 'web_fetch',
-            max_content_tokens: 8192,
-          }),
-        ])
-      );
-      // Should also still have the user-defined tools
-      expect(callArgs.tools.length).toBeGreaterThan(2);
+      // Should only have user-defined tools, no web search/fetch server tools
+      expect(callArgs.tools.length).toBeGreaterThan(0);
+      const toolTypes = callArgs.tools.map((t: { type?: string }) => t.type);
+      expect(toolTypes).not.toContain('web_search_20250305');
+      expect(toolTypes).not.toContain('web_fetch_20250910');
+      const toolNames = callArgs.tools.map((t: { name: string }) => t.name);
+      expect(toolNames).not.toContain('web_search');
+      expect(toolNames).not.toContain('web_fetch');
     });
   });
 
@@ -416,14 +393,8 @@ describe('sendMessage', () => {
       await sendMessage(planId, [], 'Build me a plan');
 
       const callArgs = mockCreate.mock.calls[0][0];
-      // Should only have web tools, no user-defined tools
-      expect(callArgs.tools).toHaveLength(2);
-      expect(callArgs.tools).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ type: 'web_search_20250305', name: 'web_search' }),
-          expect.objectContaining({ type: 'web_fetch_20250910', name: 'web_fetch' }),
-        ])
-      );
+      // Planning mode: no tools
+      expect(callArgs.tools).toBeUndefined();
     });
   });
 });
